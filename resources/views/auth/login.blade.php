@@ -67,12 +67,66 @@
     </div>
 
     <script>
-        // Registrar SW también en login para habilitar PWA desde la primera visita
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(()=>{});
+        (function(){
+            console.log('[PWA][login] location', location.href);
+            console.log('[PWA][login] protocol/host', location.protocol, location.host);
+            console.log('[PWA][login] display-mode', window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser');
+            console.log('[PWA][login] navigator.standalone (iOS)', ("standalone" in navigator) ? navigator.standalone : 'n/a');
+
+            // Check manifest
+            fetch('/manifest.json', { cache: 'no-store' })
+                .then(r => console.log('[PWA][login] manifest status', r.status))
+                .catch(e => console.warn('[PWA][login] manifest fetch error', e));
+
+            // Service worker registration with logs
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                        .then(reg => {
+                            console.log('[PWA][login] SW registered @', reg.scope);
+                            if (reg.installing) { console.log('[PWA][login] SW installing'); reg.installing.addEventListener('statechange', () => console.log('[PWA][login] installing state', reg.installing && reg.installing.state)); }
+                            if (reg.waiting) { console.log('[PWA][login] SW waiting'); }
+                            if (reg.active) { console.log('[PWA][login] SW active'); }
+                            reg.addEventListener('updatefound', () => console.log('[PWA][login] updatefound'));
+                            navigator.serviceWorker.addEventListener('controllerchange', () => console.log('[PWA][login] controllerchange'));
+                        })
+                        .catch(err => console.error('[PWA][login] SW register error', err));
+                });
+            }
+
+            // Install prompt handling
+            let deferredPrompt = null;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('[PWA][login] beforeinstallprompt fired', e);
+                e.preventDefault();
+                deferredPrompt = e;
+                const btn = document.getElementById('installBtn');
+                if (btn) btn.hidden = false;
             });
-        }
+
+            window.addEventListener('appinstalled', () => {
+                console.log('[PWA][login] appinstalled');
+            });
+
+            window.launchPwaInstall = async function() {
+                const btn = document.getElementById('installBtn');
+                if (!deferredPrompt) { console.warn('[PWA][login] No deferredPrompt available'); return; }
+                btn && (btn.disabled = true);
+                try {
+                    await deferredPrompt.prompt();
+                    const choice = await deferredPrompt.userChoice;
+                    console.log('[PWA][login] userChoice', choice);
+                } catch (err) {
+                    console.error('[PWA][login] prompt error', err);
+                } finally {
+                    deferredPrompt = null;
+                    btn && (btn.hidden = true);
+                }
+            }
+        })();
     </script>
+    <button id="installBtn" hidden onclick="launchPwaInstall()" class="fixed inset-x-4 bottom-4 z-50 rounded-lg bg-black text-white py-3 font-semibold shadow-lg">
+        Instalar app
+    </button>
 </body>
 </html>
