@@ -29,7 +29,7 @@
         </div>
 
         <div class="bg-white shadow-sm rounded-xl p-5">
-            <form method="POST" action="{{ url('/login') }}" class="space-y-4">
+            <form id="loginForm" method="POST" action="{{ url('/login') }}" class="space-y-4">
                 @csrf
 
                 <div>
@@ -54,10 +54,11 @@
                     <a href="#" class="text-sm font-medium text-black/80 hover:text-black">¿Olvidaste tu contraseña?</a>
                 </div>
 
-                <button type="submit"
-                        class="w-full rounded-lg bg-black text-white py-3 font-semibold active:scale-[.99]">
+                <button id="submitBtn" type="submit"
+                        class="w-full rounded-lg bg-black text-white py-3 font-semibold active:scale-[.99] disabled:opacity-60 disabled:pointer-events-none">
                     Iniciar sesión
                 </button>
+                <p id="errorMsg" class="text-sm text-red-600 hidden"></p>
             </form>
         </div>
 
@@ -123,6 +124,51 @@
                     btn && (btn.hidden = true);
                 }
             }
+        })();
+    </script>
+    <script>
+        // Frontend login against external API (app.dygne.com)
+        (function(){
+            const form = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const errorMsg = document.getElementById('errorMsg');
+            if (!form) return;
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errorMsg && (errorMsg.classList.add('hidden'), errorMsg.textContent = '');
+                submitBtn && (submitBtn.disabled = true);
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                try {
+                    const res = await fetch('https://app.dygne.com/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        mode: 'cors',
+                        body: JSON.stringify({ email, password })
+                    });
+                    if (!res.ok) {
+                        throw new Error('Credenciales inválidas o error de red (' + res.status + ')');
+                    }
+                    const data = await res.json();
+                    if (!data.access_token) {
+                        throw new Error('Respuesta inesperada del servidor');
+                    }
+                    // Persist token and email
+                    localStorage.setItem('auth_token', data.access_token);
+                    localStorage.setItem('auth_email', email);
+                    // Go to SPA
+                    window.location.href = '/app';
+                } catch (err) {
+                    console.error('[Login] error', err);
+                    if (errorMsg) {
+                        errorMsg.textContent = err.message || 'No se pudo iniciar sesión';
+                        errorMsg.classList.remove('hidden');
+                    }
+                } finally {
+                    submitBtn && (submitBtn.disabled = false);
+                }
+            });
         })();
     </script>
     <button id="installBtn" hidden onclick="launchPwaInstall()" class="fixed inset-x-4 bottom-4 z-50 rounded-lg bg-black text-white py-3 font-semibold shadow-lg">

@@ -1,26 +1,39 @@
 import './bootstrap';
 import { createApp } from 'vue';
+import { createRouter, createWebHistory } from 'vue-router';
 
-// Create a simple Vue component
+// Lazy import Dashboard component
+const Dashboard = () => import('./components/Dashboard.vue');
+
+const routes = [
+    { path: '/', redirect: '/dashboard' },
+    { path: '/dashboard', name: 'dashboard', component: Dashboard },
+];
+
+const router = createRouter({
+    history: createWebHistory('/app'),
+    routes,
+});
+
+// Simple auth guard (optional): if no token, send back to login page
+router.beforeEach((to, from, next) => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+        // Send to root login page of Laravel
+        window.location.href = '/';
+        return;
+    }
+    next();
+});
+
 const App = {
     template: `
-        <div class="container mx-auto p-4">
-            <h1 class="text-3xl font-bold mb-4">Welcome to Dygne PWA</h1>
-            <p class="mb-4">This is a Laravel 12 application with Vue 3 and PWA support.</p>
-            <button 
-                @click="count++"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-                Clicked {{ count }} times
-            </button>
+        <div class="min-h-screen bg-gray-50">
+            <div class="max-w-3xl mx-auto p-4">
+                <router-view />
+            </div>
         </div>
     `,
-    data() {
-        return {
-            count: 0
-        };
-    }
 };
 
-// Mount the Vue app to the #app element
-createApp(App).mount('#app');
+createApp(App).use(router).mount('#app');
