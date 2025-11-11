@@ -10,3 +10,7 @@ Route::get('/', function () {
 Route::get('/app', function () {
     return Inertia::render('Dashboard');
 })->name('app.dashboard');
+
+Route::get('/devices/{id}', function (string $id) {
+    return Inertia::render('Device', ['id' => $id]);
+})->name('devices.show');

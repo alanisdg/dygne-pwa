@@ -17,16 +17,25 @@
 
         <div class="mt-6">
           <h2 class="text-lg font-semibold mb-3">Dispositivos</h2>
+          <div class="mb-3">
+            <input
+              v-model="q"
+              type="text"
+              placeholder="Buscar por nombre…"
+              class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-base outline-none focus:ring-2 focus:ring-black/70 focus:border-black/70"
+            />
+          </div>
           <div v-if="loadingDevices" class="text-gray-500 text-sm">Cargando dispositivos…</div>
           <div v-else-if="devicesError" class="text-red-600 text-sm">{{ devicesError }}</div>
           <ul v-else class="divide-y divide-gray-100">
-            <li v-for="d in devices" :key="d.id" class="py-3 flex items-center justify-between">
-              <div>
+            <li v-for="d in filtered" :key="d.id" class="py-3 flex items-center justify-between">
+              <Link :href="`/devices/${d.id}`" class="flex-1">
                 <p class="font-medium">{{ d.name }}</p>
                 <p class="text-sm text-gray-500">IMEI: {{ d.imei }}</p>
-              </div>
+              </Link>
+              <span class="ml-3 text-gray-400">›</span>
             </li>
-            <li v-if="devices.length === 0" class="py-3 text-sm text-gray-500">Sin dispositivos</li>
+            <li v-if="filtered.length === 0" class="py-3 text-sm text-gray-500">Sin dispositivos</li>
           </ul>
         </div>
       </div>
@@ -35,7 +44,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { Link } from '@inertiajs/vue3'
 
 const email = ref('')
 const loading = ref(false)
@@ -46,6 +56,13 @@ const messageClass = ref('text-gray-600')
 const devices = ref([])
 const loadingDevices = ref(false)
 const devicesError = ref('')
+const q = ref('')
+
+const filtered = computed(() => {
+  const term = q.value.trim().toLowerCase()
+  if (!term) return devices.value
+  return devices.value.filter(d => String(d.name || '').toLowerCase().includes(term))
+})
 
 onMounted(() => {
   // Protege el acceso: si no hay token, regresa a login
