@@ -24,7 +24,7 @@
     <div class="w-full max-w-sm">
         <div class="text-center mb-8">
             <div class="mx-auto h-16 w-16 rounded-full bg-black/90 flex items-center justify-center text-white text-2xl font-bold">D</div>
-            <h1 class="mt-4 text-2xl font-semibold">Bienvenido</h1>
+            <h1 class="mt-4 text-2xl font-semibold">Bienvenido.</h1>
             <p class="text-sm text-gray-500">Inicia sesión para continuar</p>
         </div>
 
