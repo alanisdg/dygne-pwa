@@ -181,6 +181,7 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import Share from '@/components/Share.vue'
+ 
 
 const props = defineProps({ id: String })
 const name = ref('')
@@ -190,6 +191,7 @@ const lastdrop = ref(null)
 const drops = ref([])
 const media = ref([])
 const mapEl = ref(null)
+import io from 'socket.io-client' 
 let gmap = null
 let routePolyline = null
 let photoMarkers = []
@@ -227,7 +229,26 @@ const externalMapUrl = computed(() => {
 
 onMounted(async () => {
   const cacheKey = `device-name-${props.id}`
-  name.value = sessionStorage.getItem(cacheKey) || ''
+  name.value = sessionStorage.getItem(cacheKey) || '';
+         const socket = io.connect('https://dygne.com:3002', { secure: true });
+
+ 
+// Eventos de depuración
+socket.on('connect', () => {
+  console.log('✅ Conectado al servidor Socket.IO:', socket.id)
+})
+
+socket.on('connect_error', (err) => {
+  console.error('❌ Error al conectar con Socket.IO:', err.message)
+})
+
+socket.on('disconnect', (reason) => {
+  console.warn('⚠️ Desconectado del socket:', reason)
+})
+
+socket.on('drop', (drop) => {
+  console.log('📩 Evento drop recibido:', drop)
+})
 
   try {
     const token = localStorage.getItem('auth_token')

@@ -14,9 +14,10 @@
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 
     <title>{{ config('app.name', 'Dygne PWA') }}</title>
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @inertiaHead
+
+  
   </head>
   <body class="font-sans antialiased bg-gray-100">
     @inertia
