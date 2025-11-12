@@ -81,6 +81,7 @@
           <div class="flex items-center justify-between px-4 py-3 border-b">
             <h3 class="text-sm font-medium text-gray-700">Detalle de media</h3>
             <div class="flex items-center gap-2">
+              <Share v-if="selectedMedia" :media="selectedMedia" />
               <button @click="downloadSelectedMedia" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 disabled:opacity-60" :disabled="downloading || !selectedMedia">
                 {{ downloading ? 'Descargando…' : 'Descargar' }}
               </button>
@@ -179,6 +180,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+import Share from '@/Components/Share.vue'
 
 const props = defineProps({ id: String })
 const name = ref('')
