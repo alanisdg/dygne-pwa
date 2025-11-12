@@ -180,7 +180,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
-import Share from '@/Components/Share.vue'
+import Share from '@/components/Share.vue'
 
 const props = defineProps({ id: String })
 const name = ref('')
