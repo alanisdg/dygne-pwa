@@ -23,8 +23,8 @@
 <body class="min-h-screen bg-gray-100 text-gray-900 antialiased flex items-center justify-center p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))]">
     <div class="w-full max-w-sm">
         <div class="text-center mb-8">
-            <div class="mx-auto h-16 w-16 rounded-full bg-black/90 flex items-center justify-center text-white text-2xl font-bold">D</div>
-            <h1 class="mt-4 text-2xl font-semibold">Bienvenido.</h1>
+            <img data-v-5dd51388="" width="50" src="https://app.dygne.com/assets/logo.png" alt="Logo" class="mx-auto">
+            <h1 class="mt-4 text-2xl font-semibold">Dygne</h1>
             <p class="text-sm text-gray-500">Inicia sesión para continuar</p>
         </div>
 
@@ -51,7 +51,7 @@
                         <input type="checkbox" name="remember" class="h-4 w-4 rounded border-gray-300 text-black focus:ring-black">
                         <span class="text-sm text-gray-600">Recordarme</span>
                     </label>
-                    <a href="#" class="text-sm font-medium text-black/80 hover:text-black">¿Olvidaste tu contraseña?</a>
+                   
                 </div>
 
                 <button id="submitBtn" type="submit"
@@ -62,9 +62,7 @@
             </form>
         </div>
 
-        <p class="mt-6 text-center text-sm text-gray-500">
-            ¿No tienes cuenta? <a class="font-medium text-black hover:underline" href="#">Regístrate</a>
-        </p>
+     
     </div>
 
     <script>

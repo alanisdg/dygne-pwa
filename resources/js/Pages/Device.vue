@@ -29,16 +29,29 @@
             <label class="block text-sm text-gray-600 mb-1">Fecha final</label>
             <input v-model="endDateLocal" type="datetime-local" class="w-full border rounded px-3 py-2 text-sm" />
           </div>
-          <div class="sm:col-span-4">
+          <div class="sm:col-span-4 flex items-center gap-2">
             <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50" :disabled="loadingRange">
               {{ loadingRange ? 'Cargando…' : 'Consultar recorrido' }}
+            </button>
+            <button type="button"
+              @click="toggleDropMarkers"
+              :class="[
+                'px-3 py-1.5 rounded text-sm border transition',
+                showDropMarkers ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-500 border-gray-200 opacity-70'
+              ]"
+              title="Mostrar solo la línea del recorrido">
+              Mostrar información del recorrido
+              <span class="ml-2 inline-block text-[11px] px-2 py-0.5 rounded border"
+                :class="showDropMarkers ? 'bg-blue-100 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-500'">
+                {{ showDropMarkers ? 'Encendido' : 'Apagado' }}
+              </span>
             </button>
           </div>
         </form>
 
         <!-- Media toggles -->
-        <div class="mt-4 flex items-center gap-2">
-          <button
+        <div v-if="hasFrontPhotos || hasRearPhotos || hasAnyVideos" class="mt-4 flex items-center gap-2">
+          <button v-if="hasFrontPhotos"
             type="button"
             @click="toggleFrontPhotos"
             :class="[
@@ -49,7 +62,7 @@
           >
             📷 Front
           </button>
-          <button
+          <button v-if="hasRearPhotos"
             type="button"
             @click="toggleRearPhotos"
             :class="[
@@ -60,7 +73,7 @@
           >
             📷 Rear
           </button>
-          <button
+          <button v-if="hasAnyVideos"
             type="button"
             @click="toggleVideos"
             :class="[
@@ -197,6 +210,8 @@ let routePolyline = null
 let photoMarkers = []
 let videoMarkers = []
 let lastDropMarker = null
+let lastDropInfoWindow = null
+let dropMarkers = []
 const deviceImei = ref('')
 const startDateLocal = ref('')
 const endDateLocal = ref('')
@@ -207,11 +222,24 @@ const showVideos = ref(true)
 const showFrontPhotos = ref(true)
 const showRearPhotos = ref(true)
 const downloading = ref(false)
+const showDropMarkers = ref(false)
 const hasAnyCoords = computed(() => {
   if (lastdrop.value && lastdrop.value.lat != null && lastdrop.value.lng != null) return true
   if (drops.value && drops.value.length > 0) return drops.value.some(d => d.lat != null && d.lng != null)
   if (media.value && media.value.length > 0) return media.value.some(m => m.latitude != null && m.longitude != null)
   return false
+})
+
+const hasFrontPhotos = computed(() => {
+  return (media.value || []).some(m => (m.extension || '').toLowerCase() === '.jpeg' && (m.type || '').toUpperCase().includes('FRONT'))
+})
+
+const hasRearPhotos = computed(() => {
+  return (media.value || []).some(m => (m.extension || '').toLowerCase() === '.jpeg' && (m.type || '').toUpperCase().includes('REAR'))
+})
+
+const hasAnyVideos = computed(() => {
+  return (media.value || []).some(m => (m.extension || '').toLowerCase() === '.mp4')
 })
 
 const mapUrl = computed(() => {
@@ -274,6 +302,16 @@ socket.on('drop', (drop) => {
         map: gmap,
         icon: { path: maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#f43f5e', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
         title: 'Último punto',
+      })
+      lastDropMarker.addListener('click', () => {
+        if (lastDropInfoWindow) lastDropInfoWindow.close()
+        const fecha = lastdrop.value?.update_time || lastdrop.value?.timeOfFix || ''
+        const lat = lastdrop.value?.lat ?? ''
+        const lng = lastdrop.value?.lng ?? ''
+        lastDropInfoWindow = new maps.InfoWindow({
+          content: `<div style="min-width:180px"><div><strong>Fecha:</strong> ${fecha}</div><div><strong>Lat:</strong> ${lat}</div><div><strong>Lng:</strong> ${lng}</div></div>`
+        })
+        lastDropInfoWindow.open({ map: gmap, anchor: lastDropMarker })
       })
     }
   }
@@ -381,11 +419,48 @@ function drawRouteAndMedia() {
       icon: { path: maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#f43f5e', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
       title: 'Último punto',
     })
+    lastDropMarker.addListener('click', () => {
+      if (lastDropInfoWindow) lastDropInfoWindow.close()
+      const fecha = lastdrop.value?.update_time || lastdrop.value?.timeOfFix || ''
+      const lat = lastdrop.value?.lat ?? ''
+      const lng = lastdrop.value?.lng ?? ''
+      lastDropInfoWindow = new maps.InfoWindow({
+        content: `<div style="min-width:180px"><div><strong>Fecha:</strong> ${fecha}</div><div><strong>Lat:</strong> ${lat}</div><div><strong>Lng:</strong> ${lng}</div></div>`
+      })
+      lastDropInfoWindow.open({ map: gmap, anchor: lastDropMarker })
+    })
   }
 
   const bounds = new maps.LatLngBounds()
   let anyBounds = false
   path.forEach(pt => { bounds.extend(pt); anyBounds = true })
+
+  ;(dropMarkers || []).forEach(mk => mk.setMap(null))
+  dropMarkers = []
+  if (showDropMarkers.value) {
+    ;(drops.value || [])
+      .filter(p => p.lat != null && p.lng != null)
+      .forEach(p => {
+        const pos = { lat: Number(p.lat), lng: Number(p.lng) }
+        const mk = new maps.Marker({
+          position: pos,
+          map: gmap,
+          icon: { path: maps.SymbolPath.CIRCLE, scale: 4, fillColor: '#2563EB', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 1 },
+          title: (p.time || p.update_time || p.captured_at || '')
+        })
+        mk.addListener('click', () => {
+          if (lastDropInfoWindow) lastDropInfoWindow.close()
+          const fecha = p.time || p.update_time || p.captured_at || ''
+          const lat = p.lat ?? ''
+          const lng = p.lng ?? ''
+          lastDropInfoWindow = new maps.InfoWindow({
+            content: `<div style="min-width:180px"><div><strong>Fecha:</strong> ${fecha}</div><div><strong>Lat:</strong> ${lat}</div><div><strong>Lng:</strong> ${lng}</div></div>`
+          })
+          lastDropInfoWindow.open({ map: gmap, anchor: mk })
+        })
+        dropMarkers.push(mk)
+      })
+  }
 
   const added = updateMediaMarkers({ fit: false })
   if (added.any) anyBounds = true
@@ -477,6 +552,11 @@ function toggleRearPhotos() {
 function toggleVideos() {
   showVideos.value = !showVideos.value
   updateMediaMarkers({ fit: false })
+}
+
+function toggleDropMarkers() {
+  showDropMarkers.value = !showDropMarkers.value
+  if (gmap) drawRouteAndMedia()
 }
 
 function toApiDateTime(localValue) {
