@@ -196,6 +196,8 @@ let gmap = null
 let routePolyline = null
 let photoMarkers = []
 let videoMarkers = []
+let lastDropMarker = null
+const deviceImei = ref('')
 const startDateLocal = ref('')
 const endDateLocal = ref('')
 const loadingRange = ref(false)
@@ -247,7 +249,34 @@ socket.on('disconnect', (reason) => {
 })
 
 socket.on('drop', (drop) => {
-  console.log('📩 Evento drop recibido:', drop)
+  if (drop && drop.imei === deviceImei.value) {
+    lastdrop.value = {
+      ...lastdrop.value,
+      lat: drop.lat,
+      lng: drop.lng,
+      speed: drop.speed,
+      heading: drop.heading,
+      satelites: drop.satelites,
+      rssi: drop.rssi,
+      powerBat: drop.powerBat,
+      powerSupply: drop.powerSupply,
+      odometroTotal: drop.odometroTotal,
+      odometroReporte: drop.odometroReporte,
+      update_time: drop.updateTime || drop.timeOfFix || ''
+    }
+    const pos = { lat: Number(drop.lat), lng: Number(drop.lng) }
+    if (lastDropMarker) {
+      lastDropMarker.setPosition(pos)
+    } else if (gmap) {
+      const maps = window.google.maps
+      lastDropMarker = new maps.Marker({
+        position: pos,
+        map: gmap,
+        icon: { path: maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#f43f5e', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
+        title: 'Último punto',
+      })
+    }
+  }
 })
 
   try {
@@ -264,6 +293,7 @@ socket.on('drop', (drop) => {
     const dev = data && (data.data || data)
     name.value = dev?.name || name.value || ''
     lastdrop.value = dev?.lastdrop || null
+    deviceImei.value = dev?.imei || ''
     if (name.value) sessionStorage.setItem(cacheKey, name.value)
 
     const repRes = await axios.get(`https://app.dygne.com/api/reports/${props.id}`, {
@@ -342,6 +372,17 @@ function drawRouteAndMedia() {
     routePolyline.setMap(gmap)
   }
 
+  // Update last drop marker
+  if (!lastDropMarker && lastdrop.value && lastdrop.value.lat != null && lastdrop.value.lng != null) {
+    const pos = { lat: Number(lastdrop.value.lat), lng: Number(lastdrop.value.lng) }
+    lastDropMarker = new maps.Marker({
+      position: pos,
+      map: gmap,
+      icon: { path: maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#f43f5e', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
+      title: 'Último punto',
+    })
+  }
+
   const bounds = new maps.LatLngBounds()
   let anyBounds = false
   path.forEach(pt => { bounds.extend(pt); anyBounds = true })
@@ -350,7 +391,10 @@ function drawRouteAndMedia() {
   if (added.any) anyBounds = true
   if (added.boundsToExtend) added.boundsToExtend.forEach(pos => bounds.extend(pos))
 
-  if (!anyBounds && lastdrop.value && lastdrop.value.lat != null && lastdrop.value.lng != null) {
+  if (lastDropMarker) {
+    bounds.extend(lastDropMarker.getPosition())
+    anyBounds = true
+  } else if (!anyBounds && lastdrop.value && lastdrop.value.lat != null && lastdrop.value.lng != null) {
     bounds.extend({ lat: Number(lastdrop.value.lat), lng: Number(lastdrop.value.lng) })
     anyBounds = true
   }
