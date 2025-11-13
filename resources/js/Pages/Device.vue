@@ -269,6 +269,8 @@ socket.on('disconnect', (reason) => {
 })
 
 socket.on('drop', (drop) => {
+  console.log(drop)
+  console.log(deviceImei.value)
   if (drop && drop.imei === deviceImei.value) {
   console.log('llego el bueno', drop)
     lastdrop.value = {
