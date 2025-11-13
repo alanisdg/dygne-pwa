@@ -50,7 +50,7 @@
         </form>
 
         <!-- Media toggles -->
-        <div v-if="hasFrontPhotos || hasRearPhotos || hasAnyVideos" class="mt-4 flex items-center gap-2">
+        <div v-if="hasFrontPhotos || hasRearPhotos || hasFrontVideos || hasRearVideos" class="mt-4 flex items-center gap-2">
           <button v-if="hasFrontPhotos"
             type="button"
             @click="toggleFrontPhotos"
@@ -73,16 +73,27 @@
           >
             📷 Rear
           </button>
-          <button v-if="hasAnyVideos"
+          <button v-if="hasFrontVideos"
             type="button"
-            @click="toggleVideos"
+            @click="toggleFrontVideos"
             :class="[
               'px-3 py-1.5 rounded text-sm border transition',
-              showVideos ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-500 border-gray-200 opacity-70'
+              showFrontVideos ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-500 border-gray-200 opacity-70'
             ]"
-            title="Mostrar/Ocultar videos"
+            title="Mostrar/Ocultar videos FRONT"
           >
-            🎥 Videos
+            🎥 Front
+          </button>
+          <button v-if="hasRearVideos"
+            type="button"
+            @click="toggleRearVideos"
+            :class="[
+              'px-3 py-1.5 rounded text-sm border transition',
+              showRearVideos ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-500 border-gray-200 opacity-70'
+            ]"
+            title="Mostrar/Ocultar videos REAR"
+          >
+            🎥 Rear
           </button>
         </div>
       </div>
@@ -128,63 +139,36 @@
         </div>
       </div>
 
-      <!-- Bottom: compact info -->
-      <div class="rounded-t-xl sm:rounded-xl bg-white shadow-sm p-4 sm:p-5 -mt-4 sm:mt-4 relative z-10">
-        <p v-if="error" class="text-red-600 text-sm">{{ error }}</p>
-        <template v-else>
-          <div class="flex items-center justify-between">
-            <p class="text-gray-700">Nombre: <span class="font-medium">{{ name || '(sin nombre)' }}</span></p>
-            <a v-if="lastdrop" :href="externalMapUrl" target="_blank" class="text-sm text-blue-600 hover:underline">Abrir en Maps</a>
+      <!-- Tabs -->
+      <div class="bg-white shadow-sm rounded-t-xl sm:rounded-xl -mt-4 sm:mt-4 relative z-10">
+        <div class="border-b px-4 sm:px-5 pt-4">
+          <div class="flex gap-3">
+            <button
+              class="px-3 py-2 text-sm border-b-2"
+              :class="activeTab === 'info' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'"
+              @click="activeTab = 'info'"
+              type="button"
+            >DeviceInfo</button>
+            <button
+              class="px-3 py-2 text-sm border-b-2"
+              :class="activeTab === 'media' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'"
+              @click="activeTab = 'media'"
+              type="button"
+            >DeviceMedia</button>
           </div>
-
-          <div v-if="lastdrop" class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-            <div class="rounded-lg border border-gray-100 p-3">
-              <p class="text-gray-500">Actualizado</p>
-              <p class="font-medium">{{ lastdrop.update_time }}</p>
-            </div>
-            <div class="rounded-lg border border-gray-100 p-3">
-              <p class="text-gray-500">Velocidad</p>
-              <p class="font-medium">{{ lastdrop.speed }} km/h</p>
-            </div>
-            <div class="rounded-lg border border-gray-100 p-3">
-              <p class="text-gray-500">Coordenadas</p>
-              <p class="font-medium">{{ lastdrop.lat }}, {{ lastdrop.lng }}</p>
-            </div>
-            <div class="rounded-lg border border-gray-100 p-3">
-              <p class="text-gray-500">Heading</p>
-              <p class="font-medium">{{ lastdrop.heading }}</p>
-            </div>
-            <div class="rounded-lg border border-gray-100 p-3">
-              <p class="text-gray-500">Satélites</p>
-              <p class="font-medium">{{ lastdrop.satelites }}</p>
-            </div>
-            <div class="rounded-lg border border-gray-100 p-3">
-              <p class="text-gray-500">RSSI</p>
-              <p class="font-medium">{{ lastdrop.rssi }}</p>
-            </div>
-            <div class="rounded-lg border border-gray-100 p-3">
-              <p class="text-gray-500">Batería</p>
-              <p class="font-medium">{{ lastdrop.powerBat }}</p>
-            </div>
-            <div class="rounded-lg border border-gray-100 p-3">
-              <p class="text-gray-500">Alimentación</p>
-              <p class="font-medium">{{ lastdrop.powerSupply }}</p>
-            </div>
-            <div class="rounded-lg border border-gray-100 p-3">
-              <p class="text-gray-500">Odómetro total</p>
-              <p class="font-medium">{{ lastdrop.odometroTotal }}</p>
-            </div>
-            <div class="rounded-lg border border-gray-100 p-3">
-              <p class="text-gray-500">Odómetro reporte</p>
-              <p class="font-medium">{{ lastdrop.odometroReporte }}</p>
-            </div>
-            <div class="rounded-lg border border-gray-100 p-3 sm:col-span-3">
-              <p class="text-gray-500">Estado</p>
-              <p class="font-medium">{{ lastdrop.stoped ? 'Detenido' : 'En movimiento' }}</p>
-            </div>
+        </div>
+        <div class="p-0">
+          <DeviceInfo
+            v-if="activeTab === 'info'"
+            :name="name"
+            :lastdrop="lastdrop"
+            :externalMapUrl="externalMapUrl"
+            :error="error"
+          />
+          <div v-else class="p-4 sm:p-5">
+            <DeviceMedia :media="media" @select="openMedia" />
           </div>
-          <p v-else class="mt-4 text-gray-500">Sin datos recientes (lastdrop).</p>
-        </template>
+        </div>
       </div>
     </div>
   </div>
@@ -194,6 +178,8 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import Share from '@/components/Share.vue'
+import DeviceInfo from '@/components/DeviceInfo.vue'
+import DeviceMedia from '@/components/DeviceMedia.vue'
  
 
 const props = defineProps({ id: String })
@@ -218,11 +204,13 @@ const endDateLocal = ref('')
 const loadingRange = ref(false)
 const showMediaModal = ref(false)
 const selectedMedia = ref(null)
-const showVideos = ref(true)
+const showFrontVideos = ref(true)
+const showRearVideos = ref(true)
 const showFrontPhotos = ref(true)
 const showRearPhotos = ref(true)
 const downloading = ref(false)
 const showDropMarkers = ref(false)
+const activeTab = ref('info')
 const hasAnyCoords = computed(() => {
   if (lastdrop.value && lastdrop.value.lat != null && lastdrop.value.lng != null) return true
   if (drops.value && drops.value.length > 0) return drops.value.some(d => d.lat != null && d.lng != null)
@@ -238,8 +226,12 @@ const hasRearPhotos = computed(() => {
   return (media.value || []).some(m => (m.extension || '').toLowerCase() === '.jpeg' && (m.type || '').toUpperCase().includes('REAR'))
 })
 
-const hasAnyVideos = computed(() => {
-  return (media.value || []).some(m => (m.extension || '').toLowerCase() === '.mp4')
+const hasFrontVideos = computed(() => {
+  return (media.value || []).some(m => (m.extension || '').toLowerCase() === '.mp4' && (m.type || '').toUpperCase().includes('FRONT'))
+})
+
+const hasRearVideos = computed(() => {
+  return (media.value || []).some(m => (m.extension || '').toLowerCase() === '.mp4' && (m.type || '').toUpperCase().includes('REAR'))
 })
 
 const mapUrl = computed(() => {
@@ -278,6 +270,7 @@ socket.on('disconnect', (reason) => {
 
 socket.on('drop', (drop) => {
   if (drop && drop.imei === deviceImei.value) {
+  console.log('llego el bueno', drop)
     lastdrop.value = {
       ...lastdrop.value,
       lat: drop.lat,
@@ -487,7 +480,7 @@ function updateMediaMarkers({ fit }) {
   if (!gmap) return { any: false, boundsToExtend: [] }
   const maps = window.google.maps
   clearMediaMarkers()
-  console.log('processing media for markers, total', (media.value||[]).length, 'showFront', showFrontPhotos.value, 'showRear', showRearPhotos.value, 'showVideos', showVideos.value)
+  console.log('processing media for markers, total', (media.value||[]).length, 'showFrontPhotos', showFrontPhotos.value, 'showRearPhotos', showRearPhotos.value, 'showFrontVideos', showFrontVideos.value, 'showRearVideos', showRearVideos.value)
   const boundsToExtend = []
   let any = false
   ;(media.value || []).forEach((m, idx) => {
@@ -505,9 +498,9 @@ function updateMediaMarkers({ fit }) {
       console.log(`[media ${idx}] skipped: missing coordinates for ext`, ext)
       return
     }
-    if ((isVideo && !showVideos.value)) {
-      console.log(`[media ${idx}] hidden by toggle`, ext)
-      return
+    if (isVideo) {
+      if (isFront && !showFrontVideos.value) { console.log(`[media ${idx}] hidden by FRONT video toggle`); return }
+      if (isRear && !showRearVideos.value) { console.log(`[media ${idx}] hidden by REAR video toggle`); return }
     }
     if (isPhoto) {
       if (isFront && !showFrontPhotos.value) { console.log(`[media ${idx}] hidden by FRONT toggle`); return }
@@ -549,8 +542,13 @@ function toggleRearPhotos() {
   updateMediaMarkers({ fit: false })
 }
 
-function toggleVideos() {
-  showVideos.value = !showVideos.value
+function toggleFrontVideos() {
+  showFrontVideos.value = !showFrontVideos.value
+  updateMediaMarkers({ fit: false })
+}
+
+function toggleRearVideos() {
+  showRearVideos.value = !showRearVideos.value
   updateMediaMarkers({ fit: false })
 }
 
@@ -593,6 +591,11 @@ async function onSubmitRange() {
   } finally {
     loadingRange.value = false
   }
+}
+
+function openMedia(m) {
+  selectedMedia.value = m
+  showMediaModal.value = true
 }
 
 function closeMediaModal() {

@@ -1,0 +1,47 @@
+<template>
+  <div class="bg-white shadow-sm rounded-xl p-4 sm:p-5">
+    <div v-if="!media || media.length === 0" class="text-sm text-gray-500">Sin media para este dispositivo.</div>
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <button
+        v-for="(m, idx) in media"
+        :key="idx"
+        type="button"
+        class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 text-left"
+        @click="$emit('select', m)"
+      >
+        <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+          <template v-if="(m.extension || '').toLowerCase() === '.mp4'">
+            <span class="text-xl">🎥</span>
+          </template>
+          <template v-else>
+            <img :src="m.url" alt="media" class="w-full h-full object-cover" />
+          </template>
+        </div>
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-800 truncate">{{ displayLabel(m) }}</p>
+          <p class="text-xs text-gray-500">{{ m.captured_at || m.update_time || m.time || '' }}</p>
+          <p v-if="m.latitude != null && m.longitude != null" class="text-xs text-gray-400">{{ m.latitude }}, {{ m.longitude }}</p>
+        </div>
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+const props = defineProps({
+  media: { type: Array, default: () => [] }
+})
+
+function displayLabel(m) {
+  const ext = (m?.extension || '').toLowerCase()
+  const t = (m?.type || '').toUpperCase()
+  const isVideo = ext === '.mp4'
+  const isPhoto = ext === '.jpeg'
+  const isFront = t.includes('FRONT')
+  const isRear = t.includes('REAR')
+
+  const base = isVideo ? 'Video' : (isPhoto ? 'Foto' : 'Media')
+  const side = isFront ? 'Frontal' : (isRear ? 'Interior' : '')
+  return side ? `${base} ${side}` : base
+}
+</script>
