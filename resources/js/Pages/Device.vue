@@ -252,7 +252,7 @@ const externalMapUrl = computed(() => {
 onMounted(async () => {
   const cacheKey = `device-name-${props.id}`
   name.value = sessionStorage.getItem(cacheKey) || '';
-         const socket = io.connect('https://dygne.com:3002', { secure: true });
+         const socket = io.connect('https://app.dygne.com:3002', { secure: true });
 
  
 // Eventos de depuración
