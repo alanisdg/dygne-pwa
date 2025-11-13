@@ -20,7 +20,7 @@ ssh $SERVER << EOF
     git checkout $BRANCH
     git pull origin $BRANCH
 
-    
+    npm run build
 
     echo "✅ Deploy completado!"
 EOF
