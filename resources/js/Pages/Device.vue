@@ -290,6 +290,7 @@ socket.on('drop', (drop) => {
     const pos = { lat: Number(drop.lat), lng: Number(drop.lng) }
     if (lastDropMarker) {
       lastDropMarker.setPosition(pos)
+      if (gmap) gmap.panTo(pos)
     } else if (gmap) {
       const maps = window.google.maps
       lastDropMarker = new maps.Marker({
@@ -308,6 +309,7 @@ socket.on('drop', (drop) => {
         })
         lastDropInfoWindow.open({ map: gmap, anchor: lastDropMarker })
       })
+      gmap.panTo(pos)
     }
   }
 })
