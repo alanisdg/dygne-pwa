@@ -10,6 +10,7 @@
       <div v-if="lastdrop" class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
         <div class="rounded-lg border border-gray-100 p-3">
           <p class="text-gray-500">Actualizado</p>
+          <p>{{ lastdrop }}</p>
           <p class="font-medium">{{ lastdrop.update_time }}</p>
         </div>
         <div class="rounded-lg border border-gray-100 p-3">
