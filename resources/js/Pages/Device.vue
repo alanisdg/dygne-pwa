@@ -334,7 +334,7 @@ socketCalamp.on('drop', (drop) => {
       powerSupply: drop.powerSupply,
       odometroTotal: drop.odometroTotal,
       odometroReporte: drop.odometroReporte,
-      update_time: drop.updateTime || drop.timeOfFix || ''
+      update_time: drop.update_time
     }
     const pos = { lat: Number(drop.lat), lng: Number(drop.lng) }
     if (lastDropMarker) {
