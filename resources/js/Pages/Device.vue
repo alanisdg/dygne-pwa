@@ -252,7 +252,8 @@ const externalMapUrl = computed(() => {
 onMounted(async () => {
   const cacheKey = `device-name-${props.id}`
   name.value = sessionStorage.getItem(cacheKey) || '';
-         const socket = io.connect('https://app.dygne.com:3002', { secure: true });
+  const socket = io.connect('https://app.dygne.com:3002', { secure: true });
+  const socketCalamp = io.connect('https://app.dygne.com:3004', { secure: true });
 
  
 // Eventos de depuración
@@ -269,6 +270,52 @@ socket.on('disconnect', (reason) => {
 })
 
 socket.on('drop', (drop) => { 
+  console.log(deviceImei.value)
+  console.log(drop.imei)
+  if (drop.imei == deviceImei.value) {
+  console.log('llego el bueno', drop)
+    lastdrop.value = {
+      ...lastdrop.value,
+      lat: drop.lat,
+      lng: drop.lng,
+      speed: drop.speed,
+      heading: drop.heading,
+      satelites: drop.satelites,
+      rssi: drop.rssi,
+      powerBat: drop.powerBat,
+      powerSupply: drop.powerSupply,
+      odometroTotal: drop.odometroTotal,
+      odometroReporte: drop.odometroReporte,
+      update_time: drop.updateTime || drop.timeOfFix || ''
+    }
+    const pos = { lat: Number(drop.lat), lng: Number(drop.lng) }
+    if (lastDropMarker) {
+      lastDropMarker.setPosition(pos)
+      if (gmap) gmap.panTo(pos)
+    } else if (gmap) {
+      const maps = window.google.maps
+      lastDropMarker = new maps.Marker({
+        position: pos,
+        map: gmap,
+        icon: { path: maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#f43f5e', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
+        title: 'Último punto',
+      })
+      lastDropMarker.addListener('click', () => {
+        if (lastDropInfoWindow) lastDropInfoWindow.close()
+        const fecha = lastdrop.value?.update_time || lastdrop.value?.timeOfFix || ''
+        const lat = lastdrop.value?.lat ?? ''
+        const lng = lastdrop.value?.lng ?? ''
+        lastDropInfoWindow = new maps.InfoWindow({
+          content: `<div style="min-width:180px"><div><strong>Fecha:</strong> ${fecha}</div><div><strong>Lat:</strong> ${lat}</div><div><strong>Lng:</strong> ${lng}</div></div>`
+        })
+        lastDropInfoWindow.open({ map: gmap, anchor: lastDropMarker })
+      })
+      gmap.panTo(pos)
+    }
+  }
+})
+
+socketCalamp.on('drop', (drop) => { 
   console.log(deviceImei.value)
   console.log(drop.imei)
   if (drop.imei == deviceImei.value) {
