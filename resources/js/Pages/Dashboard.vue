@@ -112,7 +112,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { Link } from '@inertiajs/vue3'
-import LastUpdateBadge from '@/Components/LastUpdateBadge.vue'
+import LastUpdateBadge from '@/components/LastUpdateBadge.vue'
 import io from 'socket.io-client'
 import { Gauge, CirclePower } from 'lucide-vue-next'
 

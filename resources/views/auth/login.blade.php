@@ -36,7 +36,7 @@
                     muted
                     loop
                     playsinline
-                    class="h-20 w-20 object-cover"
+                    class="h-14 w-14 object-cover"
                 ></video>
             </div>
             <h1 class="text-3xl font-bold text-dark tracking-tight mb-2 font-logo">Dygne</h1>
