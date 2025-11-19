@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-black text-gray-100 p-0 sm:p-4">
+  <div class="min-h-screen bg-black text-gray-100 p-0 sm:p-4 relative">
     <div class="max-w-3xl mx-auto">
       <div class="flex items-center gap-3 px-4 pt-4 sm:px-0 sm:pt-0 mb-4">
         <a href="/app" class="inline-flex items-center text-sm text-gray-400 hover:text-gray-100">
@@ -45,7 +45,7 @@
               :class="selectedQuickHours === 24
                 ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
                 : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
-              @click="setQuickRangeHours(24)"
+              @click="() => { console.log('[Range] click 1 día'); setQuickRangeHours(24) }"
             >1 día</button>
             <button
               type="button"
@@ -53,7 +53,7 @@
               :class="selectedQuickHours === 48
                 ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
                 : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
-              @click="setQuickRangeHours(48)"
+              @click="() => { console.log('[Range] click 2 días'); setQuickRangeHours(48) }"
             >2 días</button>
             <button
               type="button"
@@ -61,7 +61,7 @@
               :class="selectedQuickHours === 72
                 ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
                 : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
-              @click="setQuickRangeHours(72)"
+              @click="() => { console.log('[Range] click 3 días'); setQuickRangeHours(72) }"
             >3 días</button>
             <button
               type="button"
@@ -69,7 +69,7 @@
               :class="selectedQuickHours === 24 * 7
                 ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
                 : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
-              @click="setQuickRangeHours(24 * 7)"
+              @click="() => { console.log('[Range] click 1 semana'); setQuickRangeHours(24 * 7) }"
             >1 semana</button>
           </div>
           <p class="text-xs text-gray-400">Se toma desde ahora hacia atrás el rango seleccionado (por ejemplo, 1 día = últimas 24 horas).</p>
@@ -79,11 +79,21 @@
         <form v-else @submit.prevent="onSubmitRange" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
           <div class="sm:col-span-2">
             <label class="block text-sm text-gray-300 mb-1">Fecha inicial</label>
-            <input v-model="startDateLocal" type="datetime-local" class="w-full border border-white/10 bg-black rounded px-3 py-2 text-sm text-gray-100" />
+            <input
+              v-model="startDateLocal"
+              type="datetime-local"
+              class="w-full border border-white/10 bg-black rounded px-3 py-2 text-sm text-gray-100"
+              @click="openNativePicker('start', $event)"
+            />
           </div>
           <div class="sm:col-span-2">
             <label class="block text-sm text-gray-300 mb-1">Fecha final</label>
-            <input v-model="endDateLocal" type="datetime-local" class="w-full border border-white/10 bg-black rounded px-3 py-2 text-sm text-gray-100" />
+            <input
+              v-model="endDateLocal"
+              type="datetime-local"
+              class="w-full border border-white/10 bg-black rounded px-3 py-2 text-sm text-gray-100"
+              @click="openNativePicker('end', $event)"
+            />
           </div>
           <div class="sm:col-span-4 flex items-center gap-2">
             <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 disabled:opacity-50" :disabled="loadingRange">
@@ -227,6 +237,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Fullscreen loading overlay while fetching range -->
+    <div
+      v-if="loadingRange"
+      class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+    >
+      <div class="flex flex-col items-center gap-3 px-4 py-3 rounded-2xl bg-[#050814] border border-white/10 shadow-lg text-sm">
+        <div class="h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-gray-300">Consultando recorrido…</p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -327,10 +348,7 @@ socket.on('disconnect', (reason) => {
   console.warn('⚠️ Desconectado del socket:', reason)
 })
 
-socket.on('drop', (drop) => { 
-  console.log(deviceImei.value)
-  console.log(drop.imei)
-  console.log(drop)
+socket.on('drop', (drop) => {  
   if (drop.imei == deviceImei.value) {
   console.log('llego el bueno', drop)
     lastdrop.value = {
@@ -350,13 +368,28 @@ socket.on('drop', (drop) => {
     const pos = { lat: Number(drop.lat), lng: Number(drop.lng) }
     if (lastDropMarker) {
       lastDropMarker.setPosition(pos)
+      const currentIcon = lastDropMarker.getIcon()
+      if (currentIcon && typeof currentIcon === 'object') {
+        lastDropMarker.setIcon({
+          ...currentIcon,
+          rotation: Number(drop.heading) || 0,
+        })
+      }
       if (gmap) gmap.panTo(pos)
     } else if (gmap) {
       const maps = window.google.maps
       lastDropMarker = new maps.Marker({
         position: pos,
         map: gmap,
-        icon: { path: maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#f43f5e', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
+        icon: {
+          path: maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          scale: 5,
+          fillColor: '#f97316',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 1,
+          rotation: Number(drop.heading) || 0,
+        },
         title: 'Último punto',
       })
       lastDropMarker.addListener('click', () => {
@@ -374,7 +407,7 @@ socket.on('drop', (drop) => {
   }
 })
 
-socketCalamp.on('drops', (drop) => { 
+socketCalamp.on('drop', (drop) => { 
   console.log(deviceImei.value)
   console.log(drop.imei)
   console.log(drop)
@@ -397,13 +430,28 @@ socketCalamp.on('drops', (drop) => {
     const pos = { lat: Number(drop.lat), lng: Number(drop.lng) }
     if (lastDropMarker) {
       lastDropMarker.setPosition(pos)
+      const currentIcon = lastDropMarker.getIcon()
+      if (currentIcon && typeof currentIcon === 'object') {
+        lastDropMarker.setIcon({
+          ...currentIcon,
+          rotation: Number(drop.heading) || 0,
+        })
+      }
       if (gmap) gmap.panTo(pos)
     } else if (gmap) {
       const maps = window.google.maps
       lastDropMarker = new maps.Marker({
         position: pos,
         map: gmap,
-        icon: { path: maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#f43f5e', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
+        icon: {
+          path: maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          scale: 5,
+          fillColor: '#f97316',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 1,
+          rotation: Number(drop.heading) || 0,
+        },
         title: 'Último punto',
       })
       lastDropMarker.addListener('click', () => {
@@ -521,7 +569,15 @@ function drawRouteAndMedia() {
     lastDropMarker = new maps.Marker({
       position: pos,
       map: gmap,
-      icon: { path: maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#f43f5e', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
+      icon: {
+        path: maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale: 5,
+        fillColor: '#f97316',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 1,
+        rotation: Number(lastdrop.value?.heading) || 0,
+      },
       title: 'Último punto',
     })
     lastDropMarker.addListener('click', () => {
@@ -701,8 +757,21 @@ function setQuickRangeHours(hours) {
   }
 }
 
+function openNativePicker(which, evt) {
+  console.log('[Range] openNativePicker', which, 'loadingRange=', loadingRange.value)
+  const el = evt?.target
+  if (el && typeof el.showPicker === 'function') {
+    try {
+      el.showPicker()
+    } catch (e) {
+      console.warn('showPicker error', e)
+    }
+  }
+}
+
 async function onSubmitRange() {
   try {
+    console.log('[Range] onSubmitRange start, loadingRange before =', loadingRange.value, 'startDateLocal=', startDateLocal.value, 'endDateLocal=', endDateLocal.value)
     loadingRange.value = true
     const token = localStorage.getItem('auth_token')
     if (!token) throw new Error('Sin token de autenticación')
@@ -727,6 +796,7 @@ async function onSubmitRange() {
     console.error('Error al consultar rango', e)
     error.value = e.message || 'No se pudo cargar el recorrido en el rango solicitado'
   } finally {
+    console.log('[Range] onSubmitRange finally, setting loadingRange=false')
     loadingRange.value = false
   }
 }

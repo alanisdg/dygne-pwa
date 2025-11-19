@@ -47,26 +47,54 @@
             v-for="d in filtered"
             :key="d.id"
             :href="`/devices/${d.id}`"
-            class="block rounded-3xl bg-[#050814] border border-blue-500/40 hover:border-blue-400/80 shadow-[0_0_0_1px_rgba(37,99,235,0.2)] px-5 py-4 transition-colors"
+            class="block rounded-2xl bg-[#050814]   border-blue-500/40 hover:border-blue-400/80 shadow-[0_0_0_1px_rgba(37,99,235,0.2)] px-5 py-4 transition-colors"
           >
             <div class="flex items-start justify-between gap-3">
               <div class="space-y-1">
                 <p class="text-base font-semibold text-blue-200 tracking-tight">{{ d.name || 'Sin nombre' }}</p>
                 <p class="text-xs text-gray-500">IMEI: {{ d.imei }}</p>
               </div>
-              <span class="mt-1 h-2 w-2 rounded-full" :class="d.online ? 'bg-emerald-400' : 'bg-gray-500'"></span>
-            </div>
+             </div>
 
             <div class="mt-3 flex flex-wrap items-center gap-4 text-xs">
               <div class="flex items-center gap-2 text-emerald-400" v-if="d.status">
                 <span class="inline-block h-6 w-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm">📡</span>
-                <span class="font-medium">{{ d.status }}</span>
+                <span class="font-medium">{{ d.status }} </span>
               </div>
-              <div class="flex items-center gap-2 text-gray-300" v-if="d.lastdrop && d.lastdrop.speed != null">
-                <span class="inline-flex h-6 w-6 rounded-full bg-orange-500/10 items-center justify-center text-orange-300">
-                  <Gauge class="w-3.5 h-3.5" />
-                </span>
-                <span class="font-medium">{{ d.lastdrop.speed }} km/h</span>
+              <div class="flex flex-wrap items-center gap-3 text-gray-300" v-if="d.lastdrop && d.lastdrop.speed != null">
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex h-6 w-6 rounded-full bg-orange-500/10 items-center justify-center text-orange-300">
+                    <Gauge class="w-3.5 h-3.5" />
+                  </span>
+                  <span class="font-medium">{{ d.lastdrop.speed }} km/h</span>
+                </div>
+                <div v-if="d.engine_status !== undefined" class="flex items-center gap-1 text-xs">
+                  <span
+                    class="inline-flex h-6 w-6 rounded-full items-center justify-center"
+                    :class="d.engine_status == 1 ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/5 text-gray-400'"
+                  >
+                    <CirclePower class="w-3.5 h-3.5" />
+                  </span>
+                  <span :class="d.engine_status == 1 ? 'text-emerald-300' : 'text-gray-400'">
+                    {{ d.engine_status == 1 ? 'Motor encendido' : 'Motor apagado' }}
+                  </span>
+                </div>
+                <div
+                  v-if="d.lastdrop && (d.lastdrop.satelites != null || d.lastdrop.satellites != null)"
+                  class="flex items-center gap-1 text-xs text-gray-400"
+                >
+                  <div class="flex items-end gap-[1px] h-3">
+                    <span
+                      v-for="n in 5"
+                      :key="n"
+                      class="w-[2px] rounded-sm"
+                      :class="[
+                        n <= getSatLevel(d) ? getSatColorClass(d) : 'bg-gray-700/60',
+                        n === 1 ? 'h-1' : n === 2 ? 'h-1.5' : n === 3 ? 'h-2' : n === 4 ? 'h-2.5' : 'h-3'
+                      ]"
+                    ></span>
+                  </div> 
+                </div>
               </div>
               <LastUpdateBadge v-if="d.lastdrop && d.lastdrop.update_time" :value="d.lastdrop.update_time" />
             </div>
@@ -86,7 +114,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import LastUpdateBadge from '@/Components/LastUpdateBadge.vue'
 import io from 'socket.io-client'
-import { Gauge } from 'lucide-vue-next'
+import { Gauge, CirclePower } from 'lucide-vue-next'
 
 const email = ref('')
 const loading = ref(false)
@@ -104,6 +132,30 @@ const filtered = computed(() => {
   if (!term) return devices.value
   return devices.value.filter(d => String(d.name || '').toLowerCase().includes(term))
 })
+
+function getSatCount(d) {
+  if (!d || !d.lastdrop) return 0
+  const raw = d.lastdrop.satelites ?? d.lastdrop.satellites ?? 0
+  const num = Number(raw)
+  return Number.isNaN(num) ? 0 : num
+}
+
+function getSatLevel(d) {
+  const s = getSatCount(d)
+  if (s <= 0) return 0
+  if (s <= 3) return 1
+  if (s <= 5) return 2
+  if (s <= 7) return 3
+  if (s <= 10) return 4
+  return 5
+}
+
+function getSatColorClass(d) {
+  const level = getSatLevel(d)
+  if (level <= 1) return 'bg-red-500'
+  if (level === 2) return 'bg-yellow-400'
+  return 'bg-emerald-400'
+}
 
 let socketGps = null
 let socketCalamp = null

@@ -31,8 +31,21 @@
           <p class="font-medium text-gray-100">{{ lastdrop.heading }}</p>
         </div>
         <div class="rounded-xl border border-white/10 bg-black/40 p-3">
-          <p class="text-gray-400">Satélites</p>
-          <p class="font-medium text-gray-100">{{ lastdrop.satelites }}</p>
+          <p class="text-gray-400 mb-1">Satélites</p>
+          <div class="flex items-center gap-1 text-xs text-gray-400" v-if="lastdrop.satelites != null || lastdrop.satellites != null">
+            <div class="flex items-end gap-[1px] h-3">
+              <span
+                v-for="n in 5"
+                :key="n"
+                class="w-[2px] rounded-sm"
+                :class="[
+                  n <= satLevel ? satColorClass : 'bg-gray-700/60',
+                  n === 1 ? 'h-1' : n === 2 ? 'h-1.5' : n === 3 ? 'h-2' : n === 4 ? 'h-2.5' : 'h-3'
+                ]"
+              ></span>
+            </div> 
+          </div>
+          <p v-else class="font-medium text-gray-500 text-xs">Sin info de satélites</p>
         </div>
         <div class="rounded-xl border border-white/10 bg-black/40 p-3">
           <p class="text-gray-400">RSSI</p>
@@ -65,6 +78,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { Clock3, Gauge } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -72,5 +86,28 @@ const props = defineProps({
   lastdrop: Object,
   externalMapUrl: String,
   error: String,
+})
+
+const satCount = computed(() => {
+  const raw = props.lastdrop?.satelites ?? props.lastdrop?.satellites ?? 0
+  const num = Number(raw)
+  return Number.isNaN(num) ? 0 : num
+})
+
+const satLevel = computed(() => {
+  const s = satCount.value
+  if (s <= 0) return 0
+  if (s <= 3) return 1
+  if (s <= 5) return 2
+  if (s <= 7) return 3
+  if (s <= 10) return 4
+  return 5
+})
+
+const satColorClass = computed(() => {
+  const level = satLevel.value
+  if (level <= 1) return 'bg-red-500'
+  if (level === 2) return 'bg-yellow-400'
+  return 'bg-emerald-400'
 })
 </script>
