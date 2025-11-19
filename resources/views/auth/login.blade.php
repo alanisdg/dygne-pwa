@@ -12,20 +12,35 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
     <style>
         /* Safe-area padding for notches */
         :root { 
             --safe-top: env(safe-area-inset-top); 
             --safe-bottom: env(safe-area-inset-bottom); 
         }
+        .font-logo {
+            font-family: 'Lilita One', cursive;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gray-100 text-gray-900 antialiased flex items-center justify-center p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))]">
     <div class="w-full max-w-sm">
-        <div class="text-center mb-8">
-            <img data-v-5dd51388="" width="50" src="https://app.dygne.com/assets/logo.png" alt="Logo" class="mx-auto">
-            <h1 class="mt-4 text-2xl font-semibold">Dygne</h1>
-            <p class="text-sm text-gray-500">Inicia sesión para continuar</p>
+        <div class="mb-8 text-center">
+            <div class="flex justify-center mb-4">
+                <video
+                    src="/logo.mp4"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    class="h-20 w-20 object-cover"
+                ></video>
+            </div>
+            <h1 class="text-3xl font-bold text-dark tracking-tight mb-2 font-logo">Dygne</h1>
+            <p class="text-gray-400 text-sm">Inicia sesión para acceder a tu panel de monitoreo.</p>
         </div>
 
         <div class="bg-white shadow-sm rounded-xl p-5">
@@ -55,7 +70,7 @@
                 </div>
 
                 <button id="submitBtn" type="submit"
-                        class="w-full rounded-lg bg-black text-white py-3 font-semibold active:scale-[.99] disabled:opacity-60 disabled:pointer-events-none">
+                        class="w-full rounded-lg bg-[#0f8b59] hover:bg-[#0c7148] text-white py-3 font-semibold active:scale-[.99] disabled:opacity-60 disabled:pointer-events-none">
                     Iniciar sesión
                 </button>
                 <p id="errorMsg" class="text-sm text-red-600 hidden"></p>
