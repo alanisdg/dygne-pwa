@@ -1,48 +1,104 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-0 sm:p-4">
+  <div class="min-h-screen bg-black text-gray-100 p-0 sm:p-4">
     <div class="max-w-3xl mx-auto">
-      <div class="flex items-center gap-3 px-4 pt-4 sm:px-0 sm:pt-0 mb-3">
-        <a href="/app" class="inline-flex items-center text-sm text-gray-600 hover:text-black">
+      <div class="flex items-center gap-3 px-4 pt-4 sm:px-0 sm:pt-0 mb-4">
+        <a href="/app" class="inline-flex items-center text-sm text-gray-400 hover:text-gray-100">
           ← Volver
         </a>
-        <h1 class="text-xl font-semibold">{{ loading ? 'Cargando…' : (name || `Device #${id}`) }}</h1>
+        <h1 class="text-xl font-semibold tracking-tight">{{ loading ? 'Cargando…' : (name || `Device #${id}`) }}</h1>
       </div>
 
       <!-- Top half: Map -->
-      <div class="h-[50vh] bg-gray-200">
+      <div class="h-[50vh] bg-[#050814] rounded-3xl overflow-hidden border border-white/5">
         <div v-if="hasAnyCoords" class="h-full w-full">
           <div ref="mapEl" class="h-full w-full"></div>
         </div>
-        <div v-else class="h-full w-full flex items-center justify-center text-gray-500 text-sm">
+        <div v-else class="h-full w-full flex items-center justify-center text-gray-400 text-sm">
           Sin coordenadas para mostrar
         </div>
       </div>
 
-      <!-- Report range form -->
-      <div class="bg-white shadow-sm rounded-b-xl sm:rounded-xl p-4 sm:p-5 mt-0 sm:mt-4">
-        <form @submit.prevent="onSubmitRange" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+      <!-- Report range: quick + custom tabs -->
+      <div class="bg-[#050814] border border-white/5 shadow-sm rounded-b-3xl sm:rounded-3xl p-4 sm:p-5 mt-0 sm:mt-4">
+        <!-- Tabs -->
+        <div class="border-b border-white/10 mb-4 flex gap-3 text-sm">
+          <button
+            type="button"
+            class="px-3 py-2 border-b-2"
+            :class="rangeTab === 'quick' ? 'border-blue-500 text-blue-300' : 'border-transparent text-gray-500'"
+            @click="rangeTab = 'quick'"
+          >Rangos rápidos</button>
+          <button
+            type="button"
+            class="px-3 py-2 border-b-2"
+            :class="rangeTab === 'custom' ? 'border-blue-500 text-blue-300' : 'border-transparent text-gray-500'"
+            @click="rangeTab = 'custom'"
+          >Custom</button>
+        </div>
+
+        <!-- Quick ranges -->
+        <div v-if="rangeTab === 'quick'" class="space-y-3">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button
+              type="button"
+              class="inline-flex items-center justify-center px-3 py-2 rounded-full text-sm border transition"
+              :class="selectedQuickHours === 24
+                ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
+                : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
+              @click="setQuickRangeHours(24)"
+            >1 día</button>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center px-3 py-2 rounded-full text-sm border transition"
+              :class="selectedQuickHours === 48
+                ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
+                : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
+              @click="setQuickRangeHours(48)"
+            >2 días</button>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center px-3 py-2 rounded-full text-sm border transition"
+              :class="selectedQuickHours === 72
+                ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
+                : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
+              @click="setQuickRangeHours(72)"
+            >3 días</button>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center px-3 py-2 rounded-full text-sm border transition"
+              :class="selectedQuickHours === 24 * 7
+                ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
+                : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
+              @click="setQuickRangeHours(24 * 7)"
+            >1 semana</button>
+          </div>
+          <p class="text-xs text-gray-400">Se toma desde ahora hacia atrás el rango seleccionado (por ejemplo, 1 día = últimas 24 horas).</p>
+        </div>
+
+        <!-- Custom range (actual comportamiento) -->
+        <form v-else @submit.prevent="onSubmitRange" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
           <div class="sm:col-span-2">
-            <label class="block text-sm text-gray-600 mb-1">Fecha inicial</label>
-            <input v-model="startDateLocal" type="datetime-local" class="w-full border rounded px-3 py-2 text-sm" />
+            <label class="block text-sm text-gray-300 mb-1">Fecha inicial</label>
+            <input v-model="startDateLocal" type="datetime-local" class="w-full border border-white/10 bg-black rounded px-3 py-2 text-sm text-gray-100" />
           </div>
           <div class="sm:col-span-2">
-            <label class="block text-sm text-gray-600 mb-1">Fecha final</label>
-            <input v-model="endDateLocal" type="datetime-local" class="w-full border rounded px-3 py-2 text-sm" />
+            <label class="block text-sm text-gray-300 mb-1">Fecha final</label>
+            <input v-model="endDateLocal" type="datetime-local" class="w-full border border-white/10 bg-black rounded px-3 py-2 text-sm text-gray-100" />
           </div>
           <div class="sm:col-span-4 flex items-center gap-2">
-            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50" :disabled="loadingRange">
+            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 disabled:opacity-50" :disabled="loadingRange">
               {{ loadingRange ? 'Cargando…' : 'Consultar recorrido' }}
             </button>
             <button type="button"
               @click="toggleDropMarkers"
               :class="[
-                'px-3 py-1.5 rounded text-sm border transition',
-                showDropMarkers ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-500 border-gray-200 opacity-70'
+                'px-3 py-1.5 rounded-full text-sm border transition',
+                showDropMarkers ? 'bg-blue-500/20 text-blue-300 border-blue-400/70' : 'bg-white/5 text-gray-400 border-white/10 opacity-80'
               ]"
               title="Mostrar solo la línea del recorrido">
               Mostrar información del recorrido
               <span class="ml-2 inline-block text-[11px] px-2 py-0.5 rounded border"
-                :class="showDropMarkers ? 'bg-blue-100 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-500'">
+                :class="showDropMarkers ? 'bg-blue-500/20 border-blue-400/70 text-blue-200' : 'bg-black border-white/10 text-gray-400'">
                 {{ showDropMarkers ? 'Encendido' : 'Apagado' }}
               </span>
             </button>
@@ -100,16 +156,16 @@
 
       <!-- Media modal -->
       <div v-if="showMediaModal && selectedMedia" class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/50" @click="closeMediaModal"></div>
-        <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-[92vw] sm:w-[600px] overflow-hidden">
-          <div class="flex items-center justify-between px-4 py-3 border-b">
-            <h3 class="text-sm font-medium text-gray-700">Detalle de media</h3>
+        <div class="absolute inset-0 bg-black/70" @click="closeMediaModal"></div>
+        <div class="relative bg-[#050814] border border-white/10 rounded-2xl shadow-xl max-w-2xl w-[92vw] sm:w-[600px] overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
+            <h3 class="text-sm font-medium text-gray-100">Detalle de media</h3>
             <div class="flex items-center gap-2">
               <Share v-if="selectedMedia" :media="selectedMedia" />
-              <button @click="downloadSelectedMedia" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 disabled:opacity-60" :disabled="downloading || !selectedMedia">
+              <button @click="downloadSelectedMedia" class="px-3 py-1.5 bg-blue-600 text-white rounded-full text-xs hover:bg-blue-700 disabled:opacity-60" :disabled="downloading || !selectedMedia">
                 {{ downloading ? 'Descargando…' : 'Descargar' }}
               </button>
-              <button @click="closeMediaModal" class="text-gray-500 hover:text-gray-800 text-sm">✕</button>
+              <button @click="closeMediaModal" class="text-gray-400 hover:text-gray-100 text-sm">✕</button>
             </div>
           </div>
           <div class="p-4 space-y-3">
@@ -123,16 +179,16 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
               <div>
-                <p class="text-gray-500">Capturada</p>
-                <p class="font-medium">{{ selectedMedia.captured_at }}</p>
+                <p class="text-gray-400">Capturada</p>
+                <p class="font-medium text-gray-100">{{ selectedMedia.captured_at }}</p>
               </div>
               <div>
-                <p class="text-gray-500">Latitud</p>
-                <p class="font-medium">{{ selectedMedia.latitude }}</p>
+                <p class="text-gray-400">Latitud</p>
+                <p class="font-medium text-gray-100">{{ selectedMedia.latitude }}</p>
               </div>
               <div>
-                <p class="text-gray-500">Longitud</p>
-                <p class="font-medium">{{ selectedMedia.longitude }}</p>
+                <p class="text-gray-400">Longitud</p>
+                <p class="font-medium text-gray-100">{{ selectedMedia.longitude }}</p>
               </div>
             </div>
           </div>
@@ -140,18 +196,18 @@
       </div>
 
       <!-- Tabs -->
-      <div class="bg-white shadow-sm rounded-t-xl sm:rounded-xl -mt-4 sm:mt-4 relative z-10">
-        <div class="border-b px-4 sm:px-5 pt-4">
+      <div class="bg-[#050814] border border-white/5 shadow-sm rounded-t-3xl sm:rounded-3xl -mt-4 sm:mt-4 relative z-10">
+        <div class="border-b border-white/10 px-4 sm:px-5 pt-4">
           <div class="flex gap-3">
             <button
               class="px-3 py-2 text-sm border-b-2"
-              :class="activeTab === 'info' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'"
+              :class="activeTab === 'info' ? 'border-blue-500 text-blue-300' : 'border-transparent text-gray-500'"
               @click="activeTab = 'info'"
               type="button"
             >DeviceInfo</button>
             <button
               class="px-3 py-2 text-sm border-b-2"
-              :class="activeTab === 'media' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'"
+              :class="activeTab === 'media' ? 'border-blue-500 text-blue-300' : 'border-transparent text-gray-500'"
               @click="activeTab = 'media'"
               type="button"
             >DeviceMedia</button>
@@ -210,6 +266,8 @@ const showFrontPhotos = ref(true)
 const showRearPhotos = ref(true)
 const downloading = ref(false)
 const showDropMarkers = ref(false)
+const rangeTab = ref('quick')
+const selectedQuickHours = ref(24)
 const activeTab = ref('info')
 const hasAnyCoords = computed(() => {
   if (lastdrop.value && lastdrop.value.lat != null && lastdrop.value.lng != null) return true
@@ -316,7 +374,7 @@ socket.on('drop', (drop) => {
   }
 })
 
-socketCalamp.on('drop', (drop) => { 
+socketCalamp.on('drops', (drop) => { 
   console.log(deviceImei.value)
   console.log(drop.imei)
   console.log(drop)
@@ -428,7 +486,8 @@ async function initMap() {
   const center = (lastdrop.value && lastdrop.value.lat != null && lastdrop.value.lng != null)
     ? { lat: Number(lastdrop.value.lat), lng: Number(lastdrop.value.lng) }
     : (drops.value[0] ? { lat: Number(drops.value[0].lat), lng: Number(drops.value[0].lng) } : { lat: 0, lng: 0 })
-  gmap = new maps.Map(mapEl.value, { center, zoom: 14, mapTypeId: 'roadmap' })
+  gmap = new maps.Map(mapEl.value, { center, zoom: 14, mapTypeId: 'roadmap', gestureHandling: 'greedy', // permite zoom con scroll directamente
+  scrollwheel: true  })
 }
 
 function drawRouteAndMedia() {
@@ -614,6 +673,32 @@ function toApiDateTime(localValue) {
   // localValue expected format: 'YYYY-MM-DDTHH:MM'
   if (!localValue) return ''
   return localValue.replace('T', ' ') + ':00'
+}
+
+function toLocalInputValue(date) {
+  if (!date) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  const year = date.getFullYear()
+  const month = pad(date.getMonth() + 1)
+  const day = pad(date.getDate())
+  const hours = pad(date.getHours())
+  const minutes = pad(date.getMinutes())
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+function setQuickRangeHours(hours) {
+  try {
+    const now = new Date()
+    const end = now
+    const start = new Date(now.getTime() - hours * 60 * 60 * 1000)
+    startDateLocal.value = toLocalInputValue(start)
+    endDateLocal.value = toLocalInputValue(end)
+    selectedQuickHours.value = hours
+    // reutilizamos la lógica existente
+    onSubmitRange()
+  } catch (e) {
+    console.error('Error calculando rango rápido', e)
+  }
 }
 
 async function onSubmitRange() {

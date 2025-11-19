@@ -1,15 +1,15 @@
 <template>
-  <div class="bg-white shadow-sm rounded-xl p-4 sm:p-5">
-    <div v-if="!media || media.length === 0" class="text-sm text-gray-500">Sin media para este dispositivo.</div>
+  <div class="bg-[#050814] border border-white/5 shadow-sm rounded-3xl p-4 sm:p-5 text-gray-100">
+    <div v-if="!media || media.length === 0" class="text-sm text-gray-400">Sin media para este dispositivo.</div>
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <button
         v-for="(m, idx) in media"
         :key="idx"
         type="button"
-        class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 text-left"
+        class="flex items-center gap-3 p-3 border border-white/10 bg-black/40 rounded-xl hover:bg-white/5 text-left transition"
         @click="$emit('select', m)"
       >
-        <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+        <div class="w-16 h-16 bg-black/60 rounded overflow-hidden flex items-center justify-center border border-white/10">
           <template v-if="(m.extension || '').toLowerCase() === '.mp4'">
             <span class="text-xl">🎥</span>
           </template>
@@ -18,9 +18,9 @@
           </template>
         </div>
         <div class="flex-1">
-          <p class="text-sm font-medium text-gray-800 truncate">{{ displayLabel(m) }}</p>
-          <p class="text-xs text-gray-500">{{ m.captured_at || m.update_time || m.time || '' }}</p>
-          <p v-if="m.latitude != null && m.longitude != null" class="text-xs text-gray-400">{{ m.latitude }}, {{ m.longitude }}</p>
+          <p class="text-sm font-medium text-gray-100 truncate">{{ displayLabel(m) }}</p>
+          <p class="text-xs text-gray-400">{{ m.captured_at || m.update_time || m.time || '' }}</p>
+          <p v-if="m.latitude != null && m.longitude != null" class="text-xs text-gray-500">{{ m.latitude }}, {{ m.longitude }}</p>
         </div>
       </button>
     </div>

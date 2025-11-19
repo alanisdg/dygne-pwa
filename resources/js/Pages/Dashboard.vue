@@ -1,42 +1,80 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4">
-    <div class="max-w-3xl mx-auto">
-      <div class="rounded-xl bg-white shadow-sm p-5">
-        <div class="flex items-center justify-between">
-          <h1 class="text-2xl font-semibold">Dashboard</h1>
+  <div class="min-h-screen bg-black text-gray-100">
+    <div class="max-w-3xl mx-auto px-4 py-6">
+      <!-- Header -->
+      <div class="rounded-3xl bg-[#050814] border border-white/5 px-5 py-4 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight">Dashboard</h1>
+          <p class="mt-1 text-sm text-gray-400">Has iniciado sesión como:</p>
+          <p class="mt-0.5 font-mono text-sm text-gray-200 break-all">{{ email }}</p>
+        </div>
+        <div class="flex flex-col items-start sm:items-end gap-2">
           <button
-            class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm disabled:opacity-60"
+            class="inline-flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 text-sm font-medium transition disabled:opacity-60"
             :disabled="loading"
             @click="logout"
           >{{ loading ? 'Saliendo…' : 'Cerrar sesión' }}</button>
+          <div v-if="message" class="text-xs" :class="messageClass">{{ message }}</div>
         </div>
-        <p class="mt-2 text-gray-600">Has iniciado sesión como:</p>
-        <p class="mt-1 font-mono font-medium break-all">{{ email }}</p>
+      </div>
 
-        <div v-if="message" class="mt-4 text-sm" :class="messageClass">{{ message }}</div>
-
-        <div class="mt-6">
-          <h2 class="text-lg font-semibold mb-3">Dispositivos</h2>
-          <div class="mb-3">
-            <input
-              v-model="q"
-              type="text"
-              placeholder="Buscar por nombre…"
-              class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-base outline-none focus:ring-2 focus:ring-black/70 focus:border-black/70"
-            />
+      <!-- Devices section -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between px-1">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10 text-blue-400 text-sm">
+              ⎍
+            </span>
+            <h2 class="text-lg font-semibold">Dispositivos</h2>
           </div>
-          <div v-if="loadingDevices" class="text-gray-500 text-sm">Cargando dispositivos…</div>
-          <div v-else-if="devicesError" class="text-red-600 text-sm">{{ devicesError }}</div>
-          <ul v-else class="divide-y divide-gray-100">
-            <li v-for="d in filtered" :key="d.id" class="py-3 flex items-center justify-between">
-              <Link :href="`/devices/${d.id}`" class="flex-1">
-                <p class="font-medium">{{ d.name }}</p>
-                <p class="text-sm text-gray-500">IMEI: {{ d.imei }}</p>
-              </Link>
-              <span class="ml-3 text-gray-400">›</span>
-            </li>
-            <li v-if="filtered.length === 0" class="py-3 text-sm text-gray-500">Sin dispositivos</li>
-          </ul>
+          <span class="text-xs text-gray-400" v-if="filtered.length">{{ filtered.length }} activos</span>
+        </div>
+
+        <div>
+          <input
+            v-model="q"
+            type="text"
+            placeholder="Buscar por nombre…"
+            class="w-full rounded-full border border-white/10 bg-[#050814] px-4 py-2 text-sm placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-blue-500/70 focus:border-blue-500/70"
+          />
+        </div>
+
+        <div v-if="loadingDevices" class="text-sm text-gray-400 px-1">Cargando dispositivos…</div>
+        <div v-else-if="devicesError" class="text-sm text-red-400 px-1">{{ devicesError }}</div>
+
+        <div v-else class="space-y-4">
+          <Link
+            v-for="d in filtered"
+            :key="d.id"
+            :href="`/devices/${d.id}`"
+            class="block rounded-3xl bg-[#050814] border border-blue-500/40 hover:border-blue-400/80 shadow-[0_0_0_1px_rgba(37,99,235,0.2)] px-5 py-4 transition-colors"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="space-y-1">
+                <p class="text-base font-semibold text-blue-200 tracking-tight">{{ d.name || 'Sin nombre' }}</p>
+                <p class="text-xs text-gray-500">IMEI: {{ d.imei }}</p>
+              </div>
+              <span class="mt-1 h-2 w-2 rounded-full" :class="d.online ? 'bg-emerald-400' : 'bg-gray-500'"></span>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center gap-4 text-xs">
+              <div class="flex items-center gap-2 text-emerald-400" v-if="d.status">
+                <span class="inline-block h-6 w-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm">📡</span>
+                <span class="font-medium">{{ d.status }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-gray-300" v-if="d.lastdrop && d.lastdrop.speed != null">
+                <span class="inline-flex h-6 w-6 rounded-full bg-orange-500/10 items-center justify-center text-orange-300">
+                  <Gauge class="w-3.5 h-3.5" />
+                </span>
+                <span class="font-medium">{{ d.lastdrop.speed }} km/h</span>
+              </div>
+              <LastUpdateBadge v-if="d.lastdrop && d.lastdrop.update_time" :value="d.lastdrop.update_time" />
+            </div>
+          </Link>
+
+          <div v-if="filtered.length === 0" class="text-sm text-gray-500 px-1 py-6 text-center border border-dashed border-white/10 rounded-2xl">
+            Sin dispositivos
+          </div>
         </div>
       </div>
     </div>
@@ -44,8 +82,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { Link } from '@inertiajs/vue3'
+import LastUpdateBadge from '@/Components/LastUpdateBadge.vue'
+import io from 'socket.io-client'
+import { Gauge } from 'lucide-vue-next'
 
 const email = ref('')
 const loading = ref(false)
@@ -64,6 +105,64 @@ const filtered = computed(() => {
   return devices.value.filter(d => String(d.name || '').toLowerCase().includes(term))
 })
 
+let socketGps = null
+let socketCalamp = null
+
+function setupSockets() {
+  if (socketGps || socketCalamp) return
+  try {
+    const opts = { secure: true }
+    socketGps = io.connect('https://app.dygne.com:3002', opts)
+    socketCalamp = io.connect('https://app.dygne.com:3004', opts)
+
+    const handleDrop = (drop) => {
+      if (!drop || !drop.imei) return
+      const idx = devices.value.findIndex(d => String(d.imei) === String(drop.imei))
+      if (idx === -1) return
+      const current = devices.value[idx] || {}
+      const prevLast = current.lastdrop || {}
+      const updatedLast = {
+        ...prevLast,
+        lat: drop.lat,
+        lng: drop.lng,
+        speed: drop.speed,
+        heading: drop.heading,
+        satelites: drop.satelites,
+        rssi: drop.rssi,
+        powerBat: drop.powerBat,
+        powerSupply: drop.powerSupply,
+        odometroTotal: drop.odometroTotal,
+        odometroReporte: drop.odometroReporte,
+        update_time: drop.update_time || drop.updateTime || drop.timeOfFix || prevLast.update_time || '',
+      }
+      const updated = { ...current, lastdrop: updatedLast }
+      const copy = devices.value.slice()
+      copy.splice(idx, 1, updated)
+      devices.value = copy
+    }
+
+    socketGps.on('drop', handleDrop)
+    socketCalamp.on('drop', handleDrop)
+  } catch (e) {
+    console.error('[Dashboard] Error configurando sockets', e)
+  }
+}
+
+onUnmounted(() => {
+  try {
+    if (socketGps) {
+      socketGps.disconnect()
+      socketGps = null
+    }
+    if (socketCalamp) {
+      socketCalamp.disconnect()
+      socketCalamp = null
+    }
+  } catch (e) {
+    console.warn('[Dashboard] Error desconectando sockets', e)
+  }
+})
+
 onMounted(() => {
   // Protege el acceso: si no hay token, regresa a login
   const token = localStorage.getItem('auth_token')
@@ -72,7 +171,12 @@ onMounted(() => {
     return
   }
   email.value = localStorage.getItem('auth_email') || '(sin email)'
-  fetchDevices()
+  fetchDevices().then(() => {
+    setupSockets()
+  }).catch(() => {
+    // Incluso si falla la carga inicial, intentamos conectar sockets para futuros datos
+    setupSockets()
+  })
 })
 
 async function logout() {

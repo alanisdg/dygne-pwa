@@ -127,6 +127,17 @@
     <script>
         // Frontend login against external API (app.dygne.com)
         (function(){
+            // Si ya hay token, saltar el login y mandar directo al dashboard
+            try {
+                const existingToken = localStorage.getItem('auth_token');
+                if (existingToken) {
+                    window.location.href = '/app';
+                    return;
+                }
+            } catch (e) {
+                console.warn('[Login] No se pudo leer localStorage', e);
+            }
+
             const form = document.getElementById('loginForm');
             const submitBtn = document.getElementById('submitBtn');
             const errorMsg = document.getElementById('errorMsg');
