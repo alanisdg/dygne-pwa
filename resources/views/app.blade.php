@@ -15,22 +15,32 @@
 
     <title>{{ config('app.name', 'Dygne PWA') }}</title>
      @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @inertiaHead
+    @inertiaHead 
 
   
   </head>
   <body class="font-sans antialiased bg-gray-100">
     @inertia
 
-    <script>
-      // Keep SW registration here (same as before) to preserve PWA installability
-      (function(){
-        if ('serviceWorker' in navigator) {
-          window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(()=>{})
-          })
-        }
-      })();
-    </script>
+<script>
+(function () {
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', async () => {
+
+            const registration = await navigator.serviceWorker.register('/sw.js');
+
+            const token = localStorage.getItem("auth_token");
+            const user = {id: 1}
+
+            if (token  ) {
+                subscribeToPush(user, token); // <-- ahora sí existe y se ejecuta a la hora correcta
+            } else {
+                console.log("no hay user or token todavia");
+            }
+        });
+    }
+})();
+</script>
+
   </body>
 </html>

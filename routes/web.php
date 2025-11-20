@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -13,4 +14,4 @@ Route::get('/app', function () {
 
 Route::get('/devices/{id}', function (string $id) {
     return Inertia::render('Device', ['id' => $id]);
-})->name('devices.show');
+})->name('devices.show'); 

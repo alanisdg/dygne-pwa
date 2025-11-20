@@ -1,4 +1,7 @@
 import './bootstrap'
+import { subscribeToPush } from './push';
+window.subscribeToPush = subscribeToPush;
+
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
 

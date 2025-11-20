@@ -11,6 +11,19 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)).catch(() => {})
   );
 });
+self.addEventListener("push", (event) => {
+    const data = event.data ? event.data.json() : {};
+
+    const title = data.title || "Notificación";
+    const options = {
+        body: data.body || "Contenido",
+        icon: "/icons/icon-192x192.png",
+        badge: "/icons/icon-96x96.png",
+        data: data.data || {}
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
+});
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
