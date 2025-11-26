@@ -25,6 +25,9 @@
         <div class="flex-1">
           <p class="text-sm font-medium text-gray-100 truncate">{{ displayLabel(m) }}</p>
           <p class="text-xs text-gray-400">{{ m.captured_at || m.update_time || m.time || '' }}</p>
+            <p v-if="m?.upload_time" class="text-xs text-gray-400">
+              Tiempo de descarga: {{ m.upload_time }}
+            </p>
           <p v-if="m.latitude != null && m.longitude != null" class="text-xs text-gray-500">{{ m.latitude }}, {{ m.longitude }}</p>
         </div>
       </button>
