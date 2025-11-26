@@ -5,7 +5,7 @@
   >
     <div class="w-full max-w-md mx-4 bg-[#050814] border border-white/10 rounded-2xl shadow-xl p-5 text-gray-100">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-base font-semibold">Solicitar media</h2>
+        <h2 class="text-base font-semibold">Solicitar - media</h2>
         <button
           type="button"
           class="text-gray-400 hover:text-gray-200 text-sm"
@@ -192,9 +192,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
-import io from 'socket.io-client' 
+
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   imei: { type: String, default: '' }
@@ -275,8 +275,7 @@ async function requestVideo() {
     const data = response?.data
     console.log('requestVideo response', data)
 
-    if (data && data.success === true) {
-      alert('El video ha sido solicitado correctamente.')
+    if (data && data.success === true) { 
       close()
     } else {
       console.warn('Solicitud de video sin success=true', data)
@@ -318,8 +317,7 @@ async function requestPhoto() {
     const data = response?.data
     console.log('requestPhoto response', data)
 
-    if (data && data.success === true) {
-      alert('La foto ha sido solicitada correctamente.')
+    if (data && data.success === true) { 
       close()
     } else {
       console.warn('Solicitud de foto sin success=true', data)
@@ -330,6 +328,17 @@ async function requestPhoto() {
     loadingPhoto.value = false
   }
 }
+
+function handleGpsResponse(evt) {
+  const payload = evt?.detail
+  if (!payload || payload.imei !== props.imei) return
+
+  alert(payload.text || 'Se recibió una respuesta del dispositivo.')
+}
+
+onMounted(() => {
+  window.addEventListener('gps_response_message', handleGpsResponse)
+})
 async function checkAvailability() {
   if (!props.imei) {
     deviceBusy.value = false
@@ -391,14 +400,13 @@ watch(
 )
 
 onUnmounted(() => {
+  window.removeEventListener('gps_response_message', handleGpsResponse)
+
   if (availabilityIntervalId.value) {
     clearInterval(availabilityIntervalId.value)
     availabilityIntervalId.value = null
   }
-    const socket = io.connect('https://app.dygne.com:3002', { secure: true });
 })
 
-socket.on(`gps_response_${props.imei}`, (message) => {
-  console.log(  message)
-})
+
 </script>

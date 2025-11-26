@@ -268,6 +268,7 @@ import Share from '@/components/Share.vue'
 import DeviceInfo from '@/components/DeviceInfo.vue'
 import DeviceMedia from '@/components/DeviceMedia.vue'
 import RequestedDeviceMedia from '@/components/RequestedDeviceMedia.vue'
+import io from 'socket.io-client'
  
 
 const props = defineProps({ id: String })
@@ -278,7 +279,6 @@ const lastdrop = ref(null)
 const drops = ref([])
 const media = ref([])
 const mapEl = ref(null)
-import io from 'socket.io-client' 
 let gmap = null
 let routePolyline = null
 let photoMarkers = []
@@ -345,15 +345,14 @@ onMounted(async () => {
   const socket = io.connect('https://app.dygne.com:3002', { secure: true });
   const socketCalamp = io.connect('https://app.dygne.com:3004', { secure: true });
 
- 
-// Eventos de depuración
-socket.on('connect', () => {
-  console.log('✅ Conectado al servidor Socket.IO:', socket.id)
-})
+  // Eventos de depuración
+  socket.on('connect', () => {
+    console.log('✅ Conectado al servidor Socket.IO:', socket.id)
+  })
 
-socket.on('connect_error', (err) => {
-  console.error('❌ Error al conectar con Socket.IO:', err.message)
-})
+  socket.on('connect_error', (err) => {
+    console.error('❌ Error al conectar con Socket.IO:', err.message)
+  })
 
 socket.on('disconnect', (reason) => {
   console.warn('⚠️ Desconectado del socket:', reason)
@@ -496,6 +495,21 @@ socketCalamp.on('drop', (drop) => {
     lastdrop.value = dev?.lastdrop || null
     deviceImei.value = dev?.imei || ''
     if (name.value) sessionStorage.setItem(cacheKey, name.value)
+
+    console.log(`escuchando gps_response_${deviceImei.value}`)
+    socketCalamp.on(`gps_response_${deviceImei.value}`, (message) => {
+      console.log(message)
+
+      if (message?.imei === deviceImei.value) {
+        window.dispatchEvent(new CustomEvent('gps_response_message', {
+          detail: {
+            imei: message.imei,
+            text: message.message,
+          },
+        }))
+      }
+    })
+   
 
     const repRes = await axios.get(`https://app.dygne.com/api/reports/${props.id}`, {
       headers: {
