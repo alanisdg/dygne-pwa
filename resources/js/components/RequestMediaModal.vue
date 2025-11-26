@@ -116,6 +116,29 @@
           <p class="text-xs text-gray-400">
             Configura la fecha, hora y duración en segundos para la solicitud de video.
           </p>
+
+          <div>
+            <p class="text-xs text-gray-300 mb-2">Cámara</p>
+            <div class="inline-flex rounded-full bg-black/40 border border-white/10 p-1 text-[11px]">
+              <button
+                type="button"
+                class="px-3 py-1 rounded-full transition"
+                :class="videoSide === 'front' ? 'bg-white text-black' : 'text-gray-300'"
+                @click="videoSide = 'front'"
+              >
+                Frontal
+              </button>
+              <button
+                type="button"
+                class="px-3 py-1 rounded-full transition"
+                :class="videoSide === 'interior' ? 'bg-white text-black' : 'text-gray-300'"
+                @click="videoSide = 'interior'"
+              >
+                Interior
+              </button>
+            </div>
+          </div>
+
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div class="space-y-1">
               <label class="block text-gray-300">Fecha</label>
@@ -123,6 +146,7 @@
                 type="date"
                 v-model="videoDate"
                 class="w-full rounded-lg bg-black/40 border border-white/10 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-white/40"
+                @click="openNativePicker($event)"
               />
             </div>
             <div class="space-y-1">
@@ -131,6 +155,7 @@
                 type="time"
                 v-model="videoTime"
                 class="w-full rounded-lg bg-black/40 border border-white/10 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-white/40"
+                @click="openNativePicker($event)"
               />
             </div>
             <div class="space-y-1 sm:col-span-2">
@@ -154,9 +179,10 @@
             <button
               type="button"
               class="px-3 py-1.5 text-xs rounded-lg bg-white text-black font-medium hover:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed"
-              :disabled="formDisabled"
+              :disabled="formDisabled || loadingVideo || !videoDate || !videoSeconds"
+              @click="requestVideo"
             >
-              Solicitar
+              {{ loadingVideo ? 'Solicitando…' : 'Solicitar' }}
             </button>
           </div>
         </div>
@@ -178,10 +204,12 @@ const emit = defineEmits(['update:modelValue'])
 
 const type = ref('photo')
 const photoSide = ref('front')
+const videoSide = ref('front')
 const videoDate = ref('')
 const videoTime = ref('')
 const videoSeconds = ref(10)
 const loadingPhoto = ref(false)
+const loadingVideo = ref(false)
 const checkingAvailability = ref(false)
 const deviceBusy = ref(false)
 const availabilityIntervalId = ref(null)
@@ -198,6 +226,65 @@ function close() {
   if (availabilityIntervalId.value) {
     clearInterval(availabilityIntervalId.value)
     availabilityIntervalId.value = null
+  }
+}
+
+async function requestVideo() {
+  if (!props.imei || loadingVideo.value || checkingAvailability.value || deviceBusy.value) return
+
+  const token = window.localStorage.getItem('auth_token')
+  if (!token) {
+    console.error('No se encontró auth_token en localStorage')
+    return
+  }
+
+  if (!videoDate.value || !videoTime.value || !videoSeconds.value) {
+    console.warn('Faltan datos para solicitar video')
+    return
+  }
+
+  // Construir timestamp (segundos) a partir de la fecha y hora seleccionadas
+  const isoString = `${videoDate.value}T${videoTime.value}:00`
+  const tsMs = Date.parse(isoString)
+  if (Number.isNaN(tsMs)) {
+    console.error('Fecha/hora de video inválidas', isoString)
+    return
+  }
+  const timestamp = Math.floor(tsMs / 1000)
+
+  let cameraFlag = '1'
+  if (videoSide.value === 'interior') cameraFlag = '2'
+
+  const command = `camreq:0,${cameraFlag},${timestamp},${videoSeconds.value},144.126.211.5,3001`
+  const url = `https://app.dygne.com/api/devices/${encodeURIComponent(props.imei)}/send-command?command=${encodeURIComponent(command)}`
+
+  loadingVideo.value = true
+
+  try {
+    const response = await axios.post(
+      url,
+      null,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        }
+      }
+    )
+
+    const data = response?.data
+    console.log('requestVideo response', data)
+
+    if (data && data.success === true) {
+      alert('El video ha sido solicitado correctamente.')
+      close()
+    } else {
+      console.warn('Solicitud de video sin success=true', data)
+    }
+  } catch (err) {
+    console.error('Error solicitando video', err)
+  } finally {
+    loadingVideo.value = false
   }
 }
 
@@ -272,6 +359,17 @@ async function checkAvailability() {
     deviceBusy.value = false
   } finally {
     checkingAvailability.value = false
+  }
+}
+
+function openNativePicker(evt) {
+  const el = evt?.target
+  if (el && typeof el.showPicker === 'function') {
+    try {
+      el.showPicker()
+    } catch (e) {
+      console.warn('showPicker error', e)
+    }
   }
 }
 
