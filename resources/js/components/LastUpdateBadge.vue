@@ -3,7 +3,7 @@
     <span class="inline-flex h-6 w-6 rounded-full bg-blue-500/10 items-center justify-center text-blue-300">
       <Clock3 class="w-3.5 h-3.5" />
     </span>
-    <span class="text-gray-400">{{ label }}</span>
+    <span class="text-gray-400">{{ label }} </span>
   </div>
 </template>
 

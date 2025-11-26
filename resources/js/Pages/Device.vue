@@ -242,7 +242,7 @@
             <DeviceMedia :media="media" @select="openMedia" :imei="deviceImei" />
           </div>
           <div v-else class="p-4 sm:p-5">
-            <RequestedDeviceMedia @select="openMedia" />
+            <RequestedDeviceMedia :imei="deviceImei" @select="openMedia" />
           </div>
         </div>
       </div>

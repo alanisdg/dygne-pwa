@@ -21,7 +21,7 @@
         </p>
         <span
           v-if="imei"
-          class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] border"
+          class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] border gap-1"
           :class="[
             checkingAvailability ? 'border-yellow-400/40 text-yellow-300' : '',
             !checkingAvailability && deviceBusy ? 'border-red-500/40 text-red-300' : '',
@@ -29,7 +29,21 @@
           ]"
         >
           <span v-if="checkingAvailability">Revisando...</span>
-          <span v-else-if="deviceBusy">Ocupado</span>
+          <span v-else-if="deviceBusy" class="inline-flex items-center gap-1">
+            <Loader2 class="w-3 h-3 animate-spin" />
+             <span>
+              Descargando <span v-if="mediaProgress != null"> ({{ mediaProgress }}%)</span>
+            </span>
+            <Camera
+              v-if="mediaType && mediaType.toLowerCase().startsWith('photo')"
+              class="w-3 h-3"
+            />
+            <Video
+              v-else-if="mediaType && mediaType.toLowerCase().startsWith('video')"
+              class="w-3 h-3"
+            />
+           
+          </span>
           <span v-else>Disponible</span>
         </span>
       </div>
@@ -193,6 +207,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { Loader2, Camera, Video } from 'lucide-vue-next'
 import axios from 'axios'
 
 const props = defineProps({
@@ -212,6 +227,8 @@ const loadingPhoto = ref(false)
 const loadingVideo = ref(false)
 const checkingAvailability = ref(false)
 const deviceBusy = ref(false)
+const mediaProgress = ref(null)
+const mediaType = ref(null)
 const availabilityIntervalId = ref(null)
 
 const formDisabled = computed(() => {
@@ -305,7 +322,10 @@ async function requestPhoto() {
   try {
     const response = await axios.post(
       url,
-      null,
+      {
+        type:photoSide.value ,
+        extension:'jpeg',
+      },
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -342,6 +362,8 @@ onMounted(() => {
 async function checkAvailability() {
   if (!props.imei) {
     deviceBusy.value = false
+    mediaProgress.value = null
+    mediaType.value = null
     return
   }
 
@@ -349,6 +371,8 @@ async function checkAvailability() {
   if (!token) {
     console.error('No se encontró auth_token en localStorage')
     deviceBusy.value = false
+    mediaProgress.value = null
+    mediaType.value = null
     return
   }
 
@@ -363,9 +387,13 @@ async function checkAvailability() {
     })
 
     deviceBusy.value = data?.trigger?.status === true
+    mediaProgress.value = data?.progress ?? data?.trigger?.progress ?? null
+    mediaType.value = data?.type ?? data?.trigger?.type ?? null
   } catch (err) {
     console.error('Error verificando disponibilidad de media', err)
     deviceBusy.value = false
+    mediaProgress.value = null
+    mediaType.value = null
   } finally {
     checkingAvailability.value = false
   }
