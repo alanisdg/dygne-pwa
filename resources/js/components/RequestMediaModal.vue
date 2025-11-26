@@ -194,7 +194,7 @@
 <script setup>
 import { ref, computed, watch, onUnmounted } from 'vue'
 import axios from 'axios'
-
+import io from 'socket.io-client' 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   imei: { type: String, default: '' }
@@ -395,5 +395,10 @@ onUnmounted(() => {
     clearInterval(availabilityIntervalId.value)
     availabilityIntervalId.value = null
   }
+    const socket = io.connect('https://app.dygne.com:3002', { secure: true });
+})
+
+socket.on(`gps_response_${props.imei}`, (message) => {
+  console.log(  message)
 })
 </script>

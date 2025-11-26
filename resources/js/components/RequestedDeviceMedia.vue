@@ -36,8 +36,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, defineProps } from 'vue'
 import axios from 'axios'
+
+const props = defineProps({
+  imei: {
+    type: String,
+    required: true
+  }
+})
 
 const media = ref([])
 const loading = ref(true)
