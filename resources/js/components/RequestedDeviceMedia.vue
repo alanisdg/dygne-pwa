@@ -1,17 +1,11 @@
 <template>
   <div class="bg-[#050814] border border-white/5 shadow-sm rounded-3xl p-4 sm:p-5 text-gray-100 space-y-3">
     <div class="flex justify-between items-center gap-3">
-      <p class="text-sm font-medium text-gray-100">Media del dispositivo</p>
-      <button
-        type="button"
-        class="px-3 py-1.5 text-xs rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-gray-100"
-        @click="showRequestModal = true"
-      >
-        Solicitar media
-      </button>
+      <p class="text-sm font-medium text-gray-100">Media solicitada</p>
     </div>
 
-    <div v-if="!media || media.length === 0" class="text-sm text-gray-400">Sin media para este dispositivo.</div>
+    <div v-if="loading" class="text-sm text-gray-400">Cargando media solicitada…</div>
+    <div v-else-if="!media || media.length === 0" class="text-sm text-gray-400">Sin media solicitada para este dispositivo.</div>
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <button
         v-for="(m, idx) in media"
@@ -35,21 +29,40 @@
         </div>
       </button>
     </div>
-
-    <RequestMediaModal v-model="showRequestModal" :imei="imei" />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import RequestMediaModal from './RequestMediaModal.vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
-const props = defineProps({
-  media: { type: Array, default: () => [] },
-  imei: { type: String, default: '' }
+const media = ref([])
+const loading = ref(true)
+
+onMounted(async () => {
+  try {
+    const token = window.localStorage.getItem('auth_token')
+    if (!token) throw new Error('Sin token de autenticación')
+
+    const res = await axios.get('https://app.dygne.com/api/media', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
+      },
+      params: {
+        trigger_source: 'SERVER REQUEST (0)'
+      }
+    })
+
+    const data = res.data
+    media.value = Array.isArray(data?.data || data) ? (data.data || data) : []
+  } catch (e) {
+    console.error('Error cargando media solicitada', e)
+    media.value = []
+  } finally {
+    loading.value = false
+  }
 })
-
-const showRequestModal = ref(false)
 
 function displayLabel(m) {
   const ext = (m?.extension || '').toLowerCase()

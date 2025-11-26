@@ -220,7 +220,14 @@
               :class="activeTab === 'media' ? 'border-blue-500 text-blue-300' : 'border-transparent text-gray-500'"
               @click="activeTab = 'media'"
               type="button"
-            >DeviceMedia</button>
+              
+            >DeviceMedia</button> 
+            <button
+              class="px-3 py-2 text-sm border-b-2"
+              :class="activeTab === 'requested' ? 'border-blue-500 text-blue-300' : 'border-transparent text-gray-500'"
+              @click="activeTab = 'requested'"
+              type="button"
+            >Media solicitada</button>
           </div>
         </div>
         <div class="p-0">
@@ -231,8 +238,11 @@
             :externalMapUrl="externalMapUrl"
             :error="error"
           />
+          <div v-else-if="activeTab === 'media'" class="p-4 sm:p-5">
+            <DeviceMedia :media="media" @select="openMedia" :imei="deviceImei" />
+          </div>
           <div v-else class="p-4 sm:p-5">
-            <DeviceMedia :media="media" @select="openMedia" />
+            <RequestedDeviceMedia @select="openMedia" />
           </div>
         </div>
       </div>
@@ -257,6 +267,7 @@ import axios from 'axios'
 import Share from '@/components/Share.vue'
 import DeviceInfo from '@/components/DeviceInfo.vue'
 import DeviceMedia from '@/components/DeviceMedia.vue'
+import RequestedDeviceMedia from '@/components/RequestedDeviceMedia.vue'
  
 
 const props = defineProps({ id: String })
@@ -288,7 +299,7 @@ const showRearPhotos = ref(true)
 const downloading = ref(false)
 const showDropMarkers = ref(false)
 const rangeTab = ref('quick')
-const selectedQuickHours = ref(24)
+const selectedQuickHours = ref(null)
 const activeTab = ref('info')
 const hasAnyCoords = computed(() => {
   if (lastdrop.value && lastdrop.value.lat != null && lastdrop.value.lng != null) return true
@@ -789,6 +800,16 @@ async function onSubmitRange() {
     const data = res.data
     drops.value = Array.isArray(data?.drops) ? data.drops : []
     media.value = Array.isArray(data?.media) ? data.media : []
+
+    const resReq = await axios.get(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      },
+      params: { start_date, end_date, type: 'request' },
+    })
+    const dataReq = resReq.data
+    requestedMedia.value = Array.isArray(dataReq?.media) ? dataReq.media : []
     console.log('range drops count', drops.value.length)
     console.log('range media count', media.value.length, 'by ext', media.value.reduce((acc,m)=>{const e=(m.extension||'').toLowerCase();acc[e]=(acc[e]||0)+1;return acc},{}) )
     if (gmap) drawRouteAndMedia()

@@ -76,7 +76,7 @@
                     <CirclePower class="w-3.5 h-3.5" />
                   </span>
                   <span :class="d.engine_status == 1 ? 'text-emerald-300' : 'text-gray-400'">
-                    {{ d.engine_status == 1 ? 'Motor encendido' : 'Motor apagado' }}
+ 
                   </span>
                 </div>
                 <div
