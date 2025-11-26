@@ -50,7 +50,8 @@ onMounted(async () => {
         Accept: 'application/json'
       },
       params: {
-        trigger_source: 'SERVER REQUEST (0)'
+        trigger_source: 'SERVER REQUEST (0)',
+        imei: props.imei
       }
     })
 
