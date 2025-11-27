@@ -239,7 +239,13 @@
             :error="error"
           />
           <div v-else-if="activeTab === 'media'" class="p-4 sm:p-5">
-            <DeviceMedia :media="media" @select="openMedia" :imei="deviceImei" />
+            <DeviceMedia
+              :media="media"
+              :imei="deviceImei"
+              @select="openMedia"
+              @updated="handleMediaUpdated"
+              @locate="locateMediaOnMap"
+            />
           </div>
           <div v-else class="p-4 sm:p-5">
             <RequestedDeviceMedia :imei="deviceImei" @select="openMedia" />
@@ -292,6 +298,7 @@ const endDateLocal = ref('')
 const loadingRange = ref(false)
 const showMediaModal = ref(false)
 const selectedMedia = ref(null)
+const requestedMedia = ref([])
 const showFrontVideos = ref(true)
 const showRearVideos = ref(true)
 const showFrontPhotos = ref(true)
@@ -375,6 +382,13 @@ socket.on('drop', (drop) => {
       odometroReporte: drop.odometroReporte,
       update_time: drop.updateTime || drop.timeOfFix || ''
     }
+    // Agregar este drop al recorrido y redibujar la ruta
+    drops.value = [...(drops.value || []), {
+      ...drop,
+      lat: drop.lat,
+      lng: drop.lng,
+    }]
+    if (gmap) drawRouteAndMedia()
     const pos = { lat: Number(drop.lat), lng: Number(drop.lng) }
     if (lastDropMarker) {
       lastDropMarker.setPosition(pos)
@@ -437,6 +451,13 @@ socketCalamp.on('drop', (drop) => {
       odometroReporte: drop.odometroReporte,
       update_time: drop.update_time
     }
+    // Agregar este drop al recorrido y redibujar la ruta
+    drops.value = [...(drops.value || []), {
+      ...drop,
+      lat: drop.lat,
+      lng: drop.lng,
+    }]
+    if (gmap) drawRouteAndMedia()
     const pos = { lat: Number(drop.lat), lng: Number(drop.lng) }
     if (lastDropMarker) {
       lastDropMarker.setPosition(pos)
@@ -566,26 +587,148 @@ async function initMap() {
 function drawRouteAndMedia() {
   if (!gmap) return
   const maps = window.google.maps
-  const path = (drops.value || [])
+  const dropsWithCoords = (drops.value || [])
     .filter(p => p.lat != null && p.lng != null)
+  const path = dropsWithCoords
     .map(p => ({ lat: Number(p.lat), lng: Number(p.lng) }))
   console.log('drawRouteAndMedia path points', path.length)
 
   if (routePolyline) {
-    routePolyline.setMap(null)
+    // routePolyline puede ser un solo polyline o un arreglo de polylines
+    if (Array.isArray(routePolyline)) {
+      routePolyline.forEach(pl => pl && pl.setMap(null))
+    } else {
+      routePolyline.setMap(null)
+    }
     routePolyline = null
   }
   // Clear previous media markers
   clearMediaMarkers()
-  if (path.length > 0) {
-    routePolyline = new maps.Polyline({
-      path,
-      geodesic: true,
-      strokeColor: '#2563EB',
-      strokeOpacity: 0.9,
-      strokeWeight: 4,
+  if (path.length > 1) {
+    const polylines = []
+    for (let i = 0; i < dropsWithCoords.length - 1; i++) {
+      const p1 = dropsWithCoords[i]
+      const p2 = dropsWithCoords[i + 1]
+      const speedVal = Number(p2.speed ?? p1.speed ?? 0)
+      let color = '#2563EB' // azul por defecto 0-50
+      if (speedVal > 100) {
+        color = '#ef4444' // rojo
+      } else if (speedVal > 50) {
+        color = '#f97316' // naranja
+      }
+
+      const segment = new maps.Polyline({
+        path: [
+          { lat: Number(p1.lat), lng: Number(p1.lng) },
+          { lat: Number(p2.lat), lng: Number(p2.lng) },
+        ],
+        geodesic: true,
+        strokeColor: color,
+        strokeOpacity: 0.9,
+        strokeWeight: 4,
+      })
+      segment.setMap(gmap)
+      polylines.push(segment)
+    }
+    routePolyline = polylines
+  }
+
+  // Update last drop marker
+  if (!lastDropMarker && lastdrop.value && lastdrop.value.lat != null && lastdrop.value.lng != null) {
+    const pos = { lat: Number(lastdrop.value.lat), lng: Number(lastdrop.value.lng) }
+    lastDropMarker = new maps.Marker({
+      position: pos,
+      map: gmap,
+      icon: {
+        path: maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale: 5,
+        fillColor: '#f97316',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 1,
+        rotation: Number(lastdrop.value?.heading) || 0,
+      },
+      title: 'Último punto',
     })
-    routePolyline.setMap(gmap)
+    lastDropMarker.addListener('click', () => {
+      if (lastDropInfoWindow) lastDropInfoWindow.close()
+      const fecha = lastdrop.value?.update_time || lastdrop.value?.timeOfFix || ''
+      const lat = lastdrop.value?.lat ?? ''
+      const lng = lastdrop.value?.lng ?? ''
+      const speed = lastdrop.value?.speed ?? ''
+      lastDropInfoWindow = new maps.InfoWindow({
+        content: `<div style="min-width:180px">
+          <div><strong>Fecha:</strong> ${fecha}</div>
+          <div><strong>Lat:</strong> ${lat}</div>
+          <div><strong>Lng:</strong> ${lng}</div>
+          <div><strong>Velocidad:</strong> ${speed} km/h</div>
+        </div>`
+      })
+      lastDropInfoWindow.open({ map: gmap, anchor: lastDropMarker })
+    })
+  }
+
+  const bounds = new maps.LatLngBounds()
+  let anyBounds = false
+  path.forEach(pt => { bounds.extend(pt); anyBounds = true })
+
+  ;(dropMarkers || []).forEach(mk => mk.setMap(null))
+  dropMarkers = []
+  if (showDropMarkers.value) {
+    ;(drops.value || [])
+      .filter(p => p.lat != null && p.lng != null)
+      .forEach(p => {
+        const pos = { lat: Number(p.lat), lng: Number(p.lng) }
+        const mk = new maps.Marker({
+          position: pos,
+          map: gmap,
+          icon: { path: maps.SymbolPath.CIRCLE, scale: 4, fillColor: '#2563EB', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 1 },
+          title: (p.time || p.update_time || p.captured_at || '')
+        })
+        mk.addListener('click', () => {
+          if (lastDropInfoWindow) lastDropInfoWindow.close()
+          const fecha = p.time || p.update_time || p.captured_at || ''
+          const lat = p.lat ?? ''
+          const lng = p.lng ?? ''
+          const speed = p.speed ?? ''
+          lastDropInfoWindow = new maps.InfoWindow({
+            content: `<div style="min-width:220px;font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;color:#111827;font-size:12px;">
+              <div><strong>Fecha:</strong> ${fecha}</div>
+              <div><strong>Lat:</strong> ${lat}</div>
+              <div><strong>Lng:</strong> ${lng}</div>
+              <div><strong>Velocidad:</strong> ${speed} km/h</div>
+              <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                <button
+                  id="request-photo-front"
+                  type="button"
+                  style="display:inline-block;padding:4px 10px;border-radius:9999px;border:none;background:#2563EB;color:white;font-size:11px;cursor:pointer;"
+                >
+                  Foto frontal
+                </button>
+                <button
+                  id="request-photo-interior"
+                  type="button"
+                  style="display:inline-block;padding:4px 10px;border-radius:9999px;border:none;background:#0f766e;color:white;font-size:11px;cursor:pointer;"
+                >
+                  Foto interior
+                </button>
+              </div>
+            </div>`
+          })
+          lastDropInfoWindow.open({ map: gmap, anchor: mk })
+          maps.event.addListenerOnce(lastDropInfoWindow, 'domready', () => {
+            const frontBtn = document.getElementById('request-photo-front')
+            const interiorBtn = document.getElementById('request-photo-interior')
+            if (frontBtn) {
+              frontBtn.addEventListener('click', () => requestPhotoFromMap('front'))
+            }
+            if (interiorBtn) {
+              interiorBtn.addEventListener('click', () => requestPhotoFromMap('interior'))
+            }
+          })
+        })
+        dropMarkers.push(mk)
+      })
   }
 
   // Update last drop marker
@@ -617,37 +760,6 @@ function drawRouteAndMedia() {
     })
   }
 
-  const bounds = new maps.LatLngBounds()
-  let anyBounds = false
-  path.forEach(pt => { bounds.extend(pt); anyBounds = true })
-
-  ;(dropMarkers || []).forEach(mk => mk.setMap(null))
-  dropMarkers = []
-  if (showDropMarkers.value) {
-    ;(drops.value || [])
-      .filter(p => p.lat != null && p.lng != null)
-      .forEach(p => {
-        const pos = { lat: Number(p.lat), lng: Number(p.lng) }
-        const mk = new maps.Marker({
-          position: pos,
-          map: gmap,
-          icon: { path: maps.SymbolPath.CIRCLE, scale: 4, fillColor: '#2563EB', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 1 },
-          title: (p.time || p.update_time || p.captured_at || '')
-        })
-        mk.addListener('click', () => {
-          if (lastDropInfoWindow) lastDropInfoWindow.close()
-          const fecha = p.time || p.update_time || p.captured_at || ''
-          const lat = p.lat ?? ''
-          const lng = p.lng ?? ''
-          lastDropInfoWindow = new maps.InfoWindow({
-            content: `<div style="min-width:180px"><div><strong>Fecha:</strong> ${fecha}</div><div><strong>Lat:</strong> ${lat}</div><div><strong>Lng:</strong> ${lng}</div></div>`
-          })
-          lastDropInfoWindow.open({ map: gmap, anchor: mk })
-        })
-        dropMarkers.push(mk)
-      })
-  }
-
   const added = updateMediaMarkers({ fit: false })
   if (added.any) anyBounds = true
   if (added.boundsToExtend) added.boundsToExtend.forEach(pos => bounds.extend(pos))
@@ -660,6 +772,60 @@ function drawRouteAndMedia() {
     anyBounds = true
   }
   if (anyBounds) gmap.fitBounds(bounds)
+}
+
+async function requestPhotoFromMap(side) {
+  if (!deviceImei.value) return
+
+  const token = localStorage.getItem('auth_token')
+  if (!token) {
+    console.error('No se encontró auth_token en localStorage')
+    return
+  }
+
+  let commandSuffix = '1,1'
+  if (side === 'interior') commandSuffix = '1,2'
+
+  const url = `https://app.dygne.com/api/devices/${encodeURIComponent(deviceImei.value)}/send-command?command=camreq:${commandSuffix}`
+
+  try {
+    const response = await axios.post(
+      url,
+      {
+        type: side,
+        extension: 'jpeg',
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        }
+      }
+    )
+    console.log('requestPhotoFromMap response', response?.data)
+  } catch (e) {
+    console.error('Error solicitando foto desde mapa', e)
+  }
+}
+
+function handleMediaUpdated(newMedia) {
+  media.value = Array.isArray(newMedia) ? newMedia : []
+  if (gmap) drawRouteAndMedia()
+}
+
+function locateMediaOnMap(m) {
+  if (!gmap || !m) return
+  const lat = m.latitude ?? m.lat
+  const lng = m.longitude ?? m.lng
+  if (lat == null || lng == null) return
+  const pos = { lat: Number(lat), lng: Number(lng) }
+  gmap.panTo(pos)
+  gmap.setZoom(17)
+  try {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  } catch (e) {
+    // ignore if not in browser
+  }
 }
 
 function clearMediaMarkers() {

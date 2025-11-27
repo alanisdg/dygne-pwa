@@ -54,7 +54,7 @@ onMounted(async () => {
     const token = window.localStorage.getItem('auth_token')
     if (!token) throw new Error('Sin token de autenticación')
 
-    const res = await axios.get('https://app.dygne.com/api/media', {
+    const res = await axios.get('https://app.dygne.com/api/media',null, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/json'
