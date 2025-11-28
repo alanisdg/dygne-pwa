@@ -5,6 +5,34 @@ const PRECACHE_URLS = [
   '/favicon.ico',
 ];
 
+self.addEventListener("notificationclick", function (event) {
+    event.notification.close();
+
+    const data = event.notification.data || {};
+
+    // Si el usuario presiona el botón de la notificación
+    if (event.action === "open_notification") {
+        const targetUrl = data.url || "/";
+        event.waitUntil(clients.openWindow(targetUrl));
+        return;
+    }
+
+    // Si solo toca la notificación sin tocar el botón
+    const url = data.url || "/";
+
+    event.waitUntil(
+        clients.matchAll({ type: "window", includeUncontrolled: true }).then(clientList => {
+            // Si la app ya está abierta => solo enfoca
+            if (clientList.length > 0) {
+                return clientList[0].focus();
+            }
+
+            // Si no hay ventanas abiertas => abre la página
+            return clients.openWindow(url);
+        })
+    );
+});
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
