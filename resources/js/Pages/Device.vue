@@ -72,8 +72,7 @@
               @click="() => { console.log('[Range] click 1 semana'); setQuickRangeHours(24 * 7) }"
             >1 semana</button>
           </div>
-          <p class="text-xs text-gray-400">Se toma desde ahora hacia atrás el rango seleccionado (por ejemplo, 1 día = últimas 24 horas).</p>
-        </div>
+         </div>
 
         <!-- Custom range (actual comportamiento) -->
         <form v-else @submit.prevent="onSubmitRange" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">

@@ -15,3 +15,7 @@ Route::get('/app', function () {
 Route::get('/devices/{id}', function (string $id) {
     return Inertia::render('Device', ['id' => $id]);
 })->name('devices.show'); 
+
+Route::get('/notification/{id}', function (string $id) {
+    return Inertia::render('Notification', ['id' => $id]);
+})->name('notification.show');
