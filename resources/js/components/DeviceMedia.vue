@@ -19,6 +19,30 @@
           </button>
         </div>
       </div> 
+      <div
+        v-if="mediaLocal && mediaLocal.length > 0"
+        class="flex items-center justify-between pt-2 mt-1 border-t border-white/5 text-[11px] text-gray-400"
+      >
+        <button
+          type="button"
+          class="px-2 py-1 rounded border border-white/15 bg-white/5 hover:bg-white/10"
+          @click="loadUpdatedMedia(currentPage - 1)"
+        >
+          Anterior
+        </button>
+
+        <span>
+          Página {{ currentPage }} de {{ lastPage }}
+        </span>
+
+        <button
+          type="button"
+          class="px-2 py-1 rounded border border-white/15 bg-white/5 hover:bg-white/10"
+          @click="loadUpdatedMedia(currentPage + 1)"
+        >
+          Siguiente
+        </button>
+      </div>
       <div v-if="!mediaLocal || mediaLocal.length === 0" class="text-sm text-gray-400">Sin media para este dispositivo.</div>
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div
@@ -37,41 +61,42 @@
               <img :src="m.url" alt="media" class="w-full h-full object-cover" />
             </template>
           </div>
-  <div class="flex-1">
-    <p class="text-sm font-medium text-gray-100 truncate">
-      {{ displayLabel(m) }}
-    </p>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-100 truncate">
+              {{ displayLabel(m) }}
+            </p>
 
-    <p class="text-xs text-gray-400">
-      {{ m.captured_at ?? m.update_time ?? m.time ?? '' }}
-    </p>
+            <p class="text-xs text-gray-400">
+              {{ m.captured_at ?? m.update_time ?? m.time ?? '' }}
+            </p>
 
-    <p v-if="m?.id != null" class="text-[11px] text-gray-500">
-      ID: {{ m.id }}
-    </p>
+            <p v-if="m && m.id != null" class="text-[11px] text-gray-500">
+              ID: {{ m.id }}
+            </p>
 
-    <p v-if="m?.upload_time" class="text-xs text-gray-400">
-      Tiempo de descarga: {{ m.upload_time }}
-    </p>
+            <p v-if="m && m.upload_time" class="text-xs text-gray-400">
+              Tiempo de descarga: {{ m.upload_time }}
+            </p>
 
-    <p v-if="m?.latitude != null && m?.longitude != null"
-      class="text-xs text-gray-500">
-      {{ m.latitude }}, {{ m.longitude }}
-    </p>
+            <p
+              v-if="m && m.latitude != null && m.longitude != null"
+              class="text-xs text-gray-500"
+            >
+              {{ m.latitude }}, {{ m.longitude }}
+            </p>
 
-    <div class="mt-2 flex justify-end">
-      <button
-        type="button"
-        class="px-2 py-1 text-[11px] rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-gray-100"
-        @click.stop="emit('locate', m)"
-      >
-        Ubicar en mapa
-      </button>
-    </div>
-  </div>
-
+            <div class="mt-2 flex justify-end">
+              <button
+                type="button"
+                class="px-2 py-1 text-[11px] rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-gray-100"
+                @click.stop="emit('locate', m)"
+              >
+                Ubicar en mapa
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
     <RequestMediaModal v-model="showRequestModal" :imei="imei" />
   </div>
@@ -91,6 +116,9 @@ const emit = defineEmits(['select', 'updated', 'locate'])
 
 const showRequestModal = ref(false)
 const mediaLocal = ref(props.media || [])
+const currentPage = ref(1)
+const lastPage = ref(1)
+const isLoading = ref(false)
 
 watch(
   () => props.media,
@@ -100,7 +128,11 @@ watch(
   { immediate: true }
 )
 
-async function loadUpdatedMedia() {
+async function loadUpdatedMedia(page = 1) {
+  if (isLoading.value) return
+  // aseguramos mínimo página 1
+  const targetPage = page < 1 ? 1 : page
+  isLoading.value = true
   try {
     const token = window.localStorage.getItem('auth_token')
     if (!token) {
@@ -113,16 +145,28 @@ async function loadUpdatedMedia() {
         Authorization: `Bearer ${token}`,
         Accept: 'application/json'
       },
-      params: { 
-        imei: props.imei
+      params: {
+        imei: props.imei,
+        page: targetPage
       }
     })
 
-    const data = res.data
-    mediaLocal.value = Array.isArray(data?.data || data) ? (data.data || data) : []
+    const data = res.data || {}
+    const items = Array.isArray(data.data)
+      ? data.data
+      : (Array.isArray(data) ? data : [])
+
+    mediaLocal.value = items
+
+    // Laravel paginator clásico: current_page, last_page en la raíz
+    currentPage.value = data.current_page || targetPage
+    lastPage.value = data.last_page || currentPage.value
+
     emit('updated', mediaLocal.value)
   } catch (e) {
     console.error('Error solicitando media actualizada', e)
+  } finally {
+    isLoading.value = false
   }
 }
 
