@@ -1,14 +1,7 @@
 <template>
   <div class="min-h-screen bg-black text-gray-100 p-0 sm:p-4">
     <div class="max-w-3xl mx-auto space-y-4">
-      <div class="flex items-center gap-3 px-4 pt-4 sm:px-0 sm:pt-0">
-        <a href="/app" class="inline-flex items-center text-sm text-gray-400 hover:text-gray-100">
-          ← Volver
-        </a>
-        <h1 class="text-xl font-semibold tracking-tight">
-          Notificación #{{ id }}
-        </h1>
-      </div>
+      <AppHeader :title="`Notificación #${id}`" backHref="/app" />
 
       <!-- Mapa centrado en la lat/lng de la notificación -->
       <div
@@ -94,6 +87,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import AppHeader from '@/components/AppHeader.vue'
 
 const props = defineProps({
   id: {

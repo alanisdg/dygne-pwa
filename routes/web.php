@@ -19,3 +19,7 @@ Route::get('/devices/{id}', function (string $id) {
 Route::get('/notification/{id}', function (string $id) {
     return Inertia::render('Notification', ['id' => $id]);
 })->name('notification.show');
+
+Route::get('/notifications', function () {
+    return Inertia::render('Notifications');
+})->name('notifications.index');

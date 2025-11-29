@@ -2,20 +2,10 @@
   <div class="min-h-screen bg-black text-gray-100">
     <div class="max-w-3xl mx-auto px-4 py-6">
       <!-- Header -->
-      <div class="rounded-3xl bg-[#050814] border border-white/5 px-5 py-4 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 class="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p class="mt-1 text-sm text-gray-400">Has iniciado sesión como:</p>
-          <p class="mt-0.5 font-mono text-sm text-gray-200 break-all">{{ email }}</p>
-        </div>
-        <div class="flex flex-col items-start sm:items-end gap-2">
-          <button
-            class="inline-flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 text-sm font-medium transition disabled:opacity-60"
-            :disabled="loading"
-            @click="logout"
-          >{{ loading ? 'Saliendo…' : 'Cerrar sesión' }}</button>
-          <div v-if="message" class="text-xs" :class="messageClass">{{ message }}</div>
-        </div>
+      <div class="rounded-3xl bg-[#050814] border border-white/5 px-5 py-4 mb-6 flex flex-col gap-1">
+        <p class="text-sm text-gray-400">Has iniciado sesión como:</p>
+        <p class="mt-0.5 font-mono text-xs sm:text-sm text-gray-200 break-all">{{ email }}</p>
+        <AppHeader class="mt-1" title="Dashboard" :email="email" />
       </div>
 
       <!-- Devices section -->
@@ -113,13 +103,11 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import LastUpdateBadge from '@/components/LastUpdateBadge.vue'
+import AppHeader from '@/components/AppHeader.vue'
 import io from 'socket.io-client'
 import { Gauge, CirclePower } from 'lucide-vue-next'
 
 const email = ref('')
-const loading = ref(false)
-const message = ref('')
-const messageClass = ref('text-gray-600')
 
 // Devices state
 const devices = ref([])
@@ -230,31 +218,6 @@ onMounted(() => {
     setupSockets()
   })
 })
-
-async function logout() {
-  loading.value = true
-  message.value = ''
-  try {
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      await fetch('https://app.dygne.com/api/logout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-      }).catch(() => {})
-    }
-  } finally {
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('auth_email')
-    message.value = 'Sesión cerrada'
-    messageClass.value = 'text-green-600'
-    setTimeout(() => { window.location.href = '/' }, 300)
-    loading.value = false
-  }
-}
 
 async function fetchDevices() {
   devicesError.value = ''
