@@ -94,22 +94,37 @@
               @click="openNativePicker('end', $event)"
             />
           </div>
-          <div class="sm:col-span-4 flex items-center gap-2">
-            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 disabled:opacity-50" :disabled="loadingRange">
+          <div class="sm:col-span-4 flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 disabled:opacity-50"
+              :disabled="loadingRange"
+            >
               {{ loadingRange ? 'Cargando…' : 'Consultar recorrido' }}
             </button>
-            <button type="button"
+            <button
+              type="button"
               @click="toggleDropMarkers"
               :class="[
                 'px-3 py-1.5 rounded-full text-sm border transition',
                 showDropMarkers ? 'bg-blue-500/20 text-blue-300 border-blue-400/70' : 'bg-white/5 text-gray-400 border-white/10 opacity-80'
               ]"
-              title="Mostrar solo la línea del recorrido">
+              title="Mostrar solo la línea del recorrido"
+            >
               Mostrar información del recorrido
-              <span class="ml-2 inline-block text-[11px] px-2 py-0.5 rounded border"
-                :class="showDropMarkers ? 'bg-blue-500/20 border-blue-400/70 text-blue-200' : 'bg-black border-white/10 text-gray-400'">
+              <span
+                class="ml-2 inline-block text-[11px] px-2 py-0.5 rounded border"
+                :class="showDropMarkers ? 'bg-blue-500/20 border-blue-400/70 text-blue-200' : 'bg-black border-white/10 text-gray-400'"
+              >
                 {{ showDropMarkers ? 'Encendido' : 'Apagado' }}
               </span>
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center px-3 py-1.5 rounded-full text-sm border border-white/15 bg-white/5 text-gray-100 hover:bg-white/10"
+              @click="showReportModal = true"
+            >
+              Reporte
             </button>
           </div>
         </form>
@@ -199,6 +214,64 @@
                 <p class="text-gray-400">Longitud</p>
                 <p class="font-medium text-gray-100">{{ selectedMedia.longitude }}</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report drops modal -->
+      <div v-if="showReportModal" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/70" @click="showReportModal = false"></div>
+        <div class="relative bg-[#050814] border border-white/10 rounded-2xl shadow-xl max-w-4xl w-[96vw] sm:w-[900px] max-h-[80vh] overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
+            <h3 class="text-sm font-medium text-gray-100">Reporte de recorrido ({{ drops.length }} puntos)</h3>
+            <button @click="showReportModal = false" class="text-gray-400 hover:text-gray-100 text-sm">✕</button>
+          </div>
+          <div class="p-4 max-h-[calc(80vh-48px)] flex flex-col">
+            <div v-if="!drops || drops.length === 0" class="text-sm text-gray-400">
+              No hay puntos de recorrido para mostrar.
+            </div>
+            <div v-else class="flex-grow overflow-auto">
+              <table class="relative min-w-full text-xs text-left text-gray-200">
+                <thead>
+                  <tr>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">#</th>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Fecha</th>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Lat</th>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Lng</th>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Velocidad</th>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Heading</th>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Satélites</th>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">RSSI</th>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Bat</th>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Supply</th>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Odo total</th>
+                    <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Odo reporte</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                  <tr
+                    v-for="(d, idx) in drops"
+                    :key="idx"
+                    class="hover:bg-white/5"
+                  >
+                    <td class="px-2 py-1 align-top text-gray-400">{{ idx + 1 }}</td>
+                    <td class="px-2 py-1 align-top">
+                      {{ d.update_time || d.time || d.timeOfFix || '' }}
+                    </td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.lat }}</td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.lng }}</td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.speed }}</td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.heading }}</td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.satelites }}</td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.rssi }}</td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.powerBat }}</td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.powerSupply }}</td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.odometroTotal }}</td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.odometroReporte }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -297,6 +370,7 @@ const endDateLocal = ref('')
 const loadingRange = ref(false)
 const showMediaModal = ref(false)
 const selectedMedia = ref(null)
+const showReportModal = ref(false)
 const requestedMedia = ref([])
 const showFrontVideos = ref(true)
 const showRearVideos = ref(true)
