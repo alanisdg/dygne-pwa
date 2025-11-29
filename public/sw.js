@@ -74,18 +74,7 @@ self.addEventListener('fetch', (event) => {
 
   // Network-first for HTML (navigation)
   if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)
-        .then(async (res) => {
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(req, res.clone());
-          return res;
-        })
-        .catch(async () => {
-          const cached = await caches.match(req);
-          return cached || caches.match('/');
-        })
-    );
+   
     return;
   }
 
