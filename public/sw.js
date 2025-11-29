@@ -38,10 +38,13 @@ self.addEventListener("notificationclick", function (event) {
     clients.matchAll({ type: "window", includeUncontrolled: true }).then(clientList => {
       console.log('[SW] notificationclick clients.matchAll result length', clientList.length);
       // Si la app ya está abierta => solo enfoca
-      if (clientList.length > 0) {
-        console.log('[SW] focusing existing client');
-        return clientList[0].focus();
-      }
+    if (clientList.length > 0) {
+      console.log('[SW] focusing existing client and navigating to URL', url);
+        const client = clientList[0];
+        client.focus();
+        client.navigate(url);   // ESTE ES EL QUE FALTABA ✨
+        return;
+    }
 
       // Si no hay ventanas abiertas => abre la página
       console.log('[SW] no clients found, opening new window', url);
