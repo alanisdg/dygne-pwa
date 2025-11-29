@@ -9,7 +9,7 @@
       </div>
 
       <!-- Top half: Map -->
-      <div class="h-[50vh] bg-[#050814] rounded-3xl overflow-hidden border border-white/5">
+      <div class="h-[50vh] bg-[#050814]  overflow-hidden border border-white/5">
         <div v-if="hasAnyCoords" class="h-full w-full">
           <div ref="mapEl" class="h-full w-full"></div>
         </div>

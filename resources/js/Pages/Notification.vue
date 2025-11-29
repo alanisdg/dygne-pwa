@@ -6,14 +6,14 @@
       <!-- Mapa centrado en la lat/lng de la notificación -->
       <div
         v-if="notification && notification.lat && notification.lng"
-        class="h-[50vh] bg-[#050814] rounded-3xl overflow-hidden border border-white/5"
+        class="h-[50vh] bg-[#050814]  overflow-hidden border border-white/5"
       >
         <div ref="mapEl" class="h-full w-full"></div>
-      </div>
+      </div>  
 
       <div
         v-if="notification && notification.url"
-        class="bg-[#050814] rounded-3xl overflow-hidden border border-white/5"
+        class="bg-[#050814]  overflow-hidden border border-white/5"
       >
         <div class="w-full bg-black/60 flex items-center justify-center">
           <img
@@ -31,7 +31,7 @@
         </div>
       </div>
 
-      <div class="bg-[#050814] border border-white/5 rounded-3xl p-4 sm:p-5">
+      <div class="bg-[#050814] border border-white/5  p-4 sm:p-5">
         <div v-if="loading" class="text-sm text-gray-400">
           Cargando notificación...
         </div>
