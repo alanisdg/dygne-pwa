@@ -11,6 +11,26 @@
         <div ref="mapEl" class="h-full w-full"></div>
       </div>
 
+      <div
+        v-if="notification && notification.url"
+        class="bg-[#050814] rounded-3xl overflow-hidden border border-white/5"
+      >
+        <div class="w-full bg-black/60 flex items-center justify-center">
+          <img
+            v-if="notification.url && notification.url.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/)"
+            :src="notification.url"
+            alt="Media de la notificación"
+            class="max-h-[50vh] w-full object-contain"
+          />
+          <video
+            v-else-if="notification.url && notification.url.toLowerCase().match(/\.mp4(\?.*)?$/)"
+            :src="notification.url"
+            controls
+            class="max-h-[50vh] w-full object-contain bg-black"
+          ></video>
+        </div>
+      </div>
+
       <div class="bg-[#050814] border border-white/5 rounded-3xl p-4 sm:p-5">
         <div v-if="loading" class="text-sm text-gray-400">
           Cargando notificación...

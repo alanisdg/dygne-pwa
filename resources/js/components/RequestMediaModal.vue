@@ -318,13 +318,15 @@ async function requestPhoto() {
   if (photoSide.value === 'interior') commandSuffix = '1,2'
   else if (photoSide.value === 'both') commandSuffix = '1,3'
   const url = `https://app.dygne.com/api/devices/${encodeURIComponent(props.imei)}/send-command?command=camreq:${commandSuffix}`
-
+  
   try {
     const response = await axios.post(
       url,
       {
         type:photoSide.value ,
         extension:'jpeg',
+        imei:props.imei,
+        
       },
       {
         headers: {
