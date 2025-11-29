@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between gap-3 px-4 pt-4 sm:px-0 sm:pt-0">
+  <div class="flex items-center justify-between gap-3">
     <div class="flex items-center gap-3">
       <a
         v-if="backHref"
@@ -25,15 +25,18 @@
       <div class="flex flex-col items-end gap-1">
         <button
           type="button"
-          class="inline-flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-1.5 text-[11px] sm:text-xs font-mono transition disabled:opacity-60 max-w-[220px]"
+          class="inline-flex items-center justify-center rounded-full bg-white/5/80 hover:bg-white/10 border border-white/10 px-4 py-1.5 text-xs font-mono transition disabled:opacity-60 max-w-[240px]"
           :disabled="loading"
           @click="toggleMenu"
         >
-          <span class="flex flex-col items-end text-right leading-tight max-w-full">
-            <span v-if="customerName" class="font-semibold text-[10px] text-gray-200 truncate">
+          <span class="flex flex-col items-start text-left leading-tight max-w-full">
+            <span
+              v-if="customerName"
+              class="text-[10px] uppercase tracking-wide font-semibold text-gray-200/90 truncate"
+            >
               {{ customerName }}
             </span>
-            <span class="text-[11px] sm:text-xs text-gray-300 truncate">
+            <span class="text-[11px] text-gray-300 truncate">
               {{ email || '(sin email)' }}
             </span>
           </span>

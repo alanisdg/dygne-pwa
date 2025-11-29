@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-black text-gray-100 p-0 sm:p-4">
     <div class="max-w-3xl mx-auto space-y-4">
-      <AppHeader :title="`Notificación #${id}`" backHref="/app" />
+      <AppHeader :title="`Notificación #${id}`" backHref="/app" :email="email" />
 
       <!-- Mapa centrado en la lat/lng de la notificación -->
       <div
@@ -99,6 +99,7 @@ const props = defineProps({
 const loading = ref(true)
 const error = ref('')
 const notification = ref(null)
+const email = ref('')
 
 // Google Maps
 const mapEl = ref(null)
@@ -166,6 +167,8 @@ async function initMapForNotification() {
 }
 
 onMounted(async () => {
+  email.value = localStorage.getItem('auth_email') || ''
+
   try {
     const token = localStorage.getItem('auth_token')
     if (!token) throw new Error('Sin token de autenticación')

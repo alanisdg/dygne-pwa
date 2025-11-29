@@ -1,8 +1,8 @@
 <template>
   <div class="min-h-screen bg-black text-gray-100">
-    <div class="max-w-3xl mx-auto px-4 py-6">
+    <div class="max-w-3xl mx-auto px-4 ">
       <!-- Header -->
-      <div class="rounded-3xl bg-[#050814] border border-white/5 px-5 py-4 mb-6 flex flex-col gap-1">
+      <div class="bg-[#020617] border border-white/5 px-4 py-3 mb-5 flex flex-col gap-1">
         
         <AppHeader class="mt-1" title="Dashboard" :email="email" />
       </div>
