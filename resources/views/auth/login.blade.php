@@ -178,9 +178,33 @@
                     if (!data.access_token) {
                         throw new Error('Respuesta inesperada del servidor');
                     }
-                    // Persist token and email
+                    // Persist token, email, user and customer info
                     localStorage.setItem('auth_token', data.access_token);
-                    localStorage.setItem('auth_email', email);
+
+                    try {
+                        // Guardar user completo si viene en la respuesta
+                        if (data.user) {
+                            localStorage.setItem('auth_user', JSON.stringify(data.user));
+                        }
+                        // Guardar customer completo si viene en la respuesta raíz
+                        if (data.customer) {
+                            localStorage.setItem('auth_customer', JSON.stringify(data.customer));
+                        }
+
+                        // Email preferente desde la respuesta, si existe
+                        const effectiveEmail = (data.user && data.user.email) ? data.user.email : email;
+                        localStorage.setItem('auth_email', effectiveEmail);
+
+                        // Nombre del cliente (puede venir como data.customer o anidado en data.user.customer)
+                        const customerFromRoot = data.customer && data.customer.name ? data.customer.name : null;
+                        const customerFromUser = data.user && data.user.customer && data.user.customer.name ? data.user.customer.name : null;
+                        const customerName = customerFromRoot || customerFromUser || '';
+                        if (customerName) {
+                            localStorage.setItem('auth_customer_name', customerName);
+                        }
+                    } catch (storageErr) {
+                        console.warn('[Login] Error guardando user/customer en localStorage', storageErr);
+                    }
                     // Go to SPA
                     window.location.href = '/app';
                 } catch (err) {

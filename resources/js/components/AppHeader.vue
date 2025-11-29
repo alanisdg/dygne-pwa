@@ -25,11 +25,18 @@
       <div class="flex flex-col items-end gap-1">
         <button
           type="button"
-          class="inline-flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-1.5 text-xs sm:text-sm font-mono transition disabled:opacity-60 max-w-[220px] truncate"
+          class="inline-flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-1.5 text-[11px] sm:text-xs font-mono transition disabled:opacity-60 max-w-[220px]"
           :disabled="loading"
           @click="toggleMenu"
         >
-          {{ email || '(sin email)' }}
+          <span class="flex flex-col items-end text-right leading-tight max-w-full">
+            <span v-if="customerName" class="font-semibold text-[10px] text-gray-200 truncate">
+              {{ customerName }}
+            </span>
+            <span class="text-[11px] sm:text-xs text-gray-300 truncate">
+              {{ email || '(sin email)' }}
+            </span>
+          </span>
         </button>
         <div v-if="message" class="text-xs" :class="messageClass">
           {{ message }}
@@ -76,6 +83,15 @@ const loading = ref(false)
 const message = ref('')
 const messageClass = ref('text-gray-600')
 const menuOpen = ref(false)
+const customerName = ref('')
+
+// Cargar nombre de cliente desde localStorage si existe
+try {
+  const storedCustomerName = localStorage.getItem('auth_customer_name')
+  customerName.value = storedCustomerName || ''
+} catch (e) {
+  console.warn('[Header] No se pudo leer auth_customer_name', e)
+}
 
 function toggleMenu() {
   if (loading.value) return
@@ -105,6 +121,10 @@ async function logout() {
   } finally {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('auth_email')
+    localStorage.removeItem('auth_user')
+    localStorage.removeItem('auth_customer')
+    localStorage.removeItem('auth_customer_name')
+    customerName.value = ''
     message.value = 'Sesión cerrada'
     messageClass.value = 'text-green-600'
     setTimeout(() => { window.location.href = '/' }, 300)

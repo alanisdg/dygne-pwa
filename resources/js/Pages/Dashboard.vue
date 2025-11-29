@@ -3,8 +3,7 @@
     <div class="max-w-3xl mx-auto px-4 py-6">
       <!-- Header -->
       <div class="rounded-3xl bg-[#050814] border border-white/5 px-5 py-4 mb-6 flex flex-col gap-1">
-        <p class="text-sm text-gray-400">Has iniciado sesión como:</p>
-        <p class="mt-0.5 font-mono text-xs sm:text-sm text-gray-200 break-all">{{ email }}</p>
+        
         <AppHeader class="mt-1" title="Dashboard" :email="email" />
       </div>
 
