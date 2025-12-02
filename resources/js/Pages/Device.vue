@@ -893,7 +893,7 @@ function locateMediaOnMap(m) {
   if (lat == null || lng == null) return
   const pos = { lat: Number(lat), lng: Number(lng) }
   gmap.panTo(pos)
-  gmap.setZoom(17)
+  gmap.setZoom(10)
   try {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (e) {

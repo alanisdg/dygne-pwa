@@ -53,8 +53,7 @@ onMounted(async () => {
   try {
     const token = window.localStorage.getItem('auth_token')
     if (!token) throw new Error('Sin token de autenticación')
-
-    const res = await axios.get('https://app.dygne.com/api/media',null, {
+    const res = await axios.get('https://app.dygne.com/api/media?imei='+props.imei,null, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/json'
@@ -66,6 +65,8 @@ onMounted(async () => {
     })
 
     const data = res.data
+    console.log('la data')
+    console.log(res.data)
     media.value = Array.isArray(data?.data || data) ? (data.data || data) : []
   } catch (e) {
     console.error('Error cargando media solicitada', e)
