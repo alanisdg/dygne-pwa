@@ -300,6 +300,12 @@
               @click="activeTab = 'requested'"
               type="button"
             >Media solicitada</button>
+            <button
+              class="px-3 py-2 text-sm border-b-2"
+              :class="activeTab === 'trips' ? 'border-blue-500 text-blue-300' : 'border-transparent text-gray-500'"
+              @click="activeTab = 'trips'"
+              type="button"
+            >Viajes</button>
           </div>
         </div>
         <div class="p-0">
@@ -319,8 +325,11 @@
               @locate="locateMediaOnMap"
             />
           </div>
-          <div v-else class="p-4 sm:p-5">
+          <div v-else-if="activeTab === 'requested'" class="p-4 sm:p-5">
             <RequestedDeviceMedia :imei="deviceImei" @select="openMedia" />
+          </div>
+          <div v-else-if="activeTab === 'trips'" class="p-4 sm:p-5">
+            <DeviceTrips :imei="deviceImei" @select="openMedia" />
           </div>
         </div>
       </div>
@@ -346,7 +355,9 @@ import Share from '@/components/Share.vue'
 import DeviceInfo from '@/components/DeviceInfo.vue'
 import DeviceMedia from '@/components/DeviceMedia.vue'
 import RequestedDeviceMedia from '@/components/RequestedDeviceMedia.vue'
+import DeviceTrips from '@/components/DeviceTrips.vue'
 import io from 'socket.io-client'
+ 
  
 
 const props = defineProps({ id: String })
