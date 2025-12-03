@@ -42,35 +42,35 @@
             <button
               type="button"
               class="inline-flex items-center justify-center px-3 py-2 rounded-full text-sm border transition"
-              :class="selectedQuickHours === 24
+              :class="selectedQuickHours === 6
                 ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
                 : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
-              @click="() => { console.log('[Range] click 1 día'); setQuickRangeHours(24) }"
-            >1 día</button>
+              @click="() => { console.log('[Range] click 6 horas'); setQuickRangeHours(6) }"
+            >6 horas</button>
             <button
               type="button"
               class="inline-flex items-center justify-center px-3 py-2 rounded-full text-sm border transition"
-              :class="selectedQuickHours === 48
+              :class="selectedQuickHours === 4
                 ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
                 : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
-              @click="() => { console.log('[Range] click 2 días'); setQuickRangeHours(48) }"
-            >2 días</button>
+              @click="() => { console.log('[Range] click 4 horas'); setQuickRangeHours(4) }"
+            >4 horas</button>
             <button
               type="button"
               class="inline-flex items-center justify-center px-3 py-2 rounded-full text-sm border transition"
-              :class="selectedQuickHours === 72
+              :class="selectedQuickHours === 3
                 ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
                 : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
-              @click="() => { console.log('[Range] click 3 días'); setQuickRangeHours(72) }"
-            >3 días</button>
+              @click="() => { console.log('[Range] click 3 horas'); setQuickRangeHours(3) }"
+            >3 horas</button>
             <button
               type="button"
               class="inline-flex items-center justify-center px-3 py-2 rounded-full text-sm border transition"
-              :class="selectedQuickHours === 24 * 7
+              :class="selectedQuickHours === 2
                 ? 'border-blue-400/80 bg-blue-500/30 text-blue-50'
                 : 'border-white/10 bg-white/5 text-gray-200 hover:bg-blue-500/20 hover:border-blue-400/70'"
-              @click="() => { console.log('[Range] click 1 semana'); setQuickRangeHours(24 * 7) }"
-            >1 semana</button>
+              @click="() => { console.log('[Range] click 2 horas'); setQuickRangeHours(2) }"
+            >2 horas</button>
           </div>
          </div>
 
