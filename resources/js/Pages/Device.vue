@@ -247,6 +247,9 @@
                     <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Supply</th>
                     <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Odo total</th>
                     <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Odo reporte</th>
+
+                     <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Evento Name</th>
+                                          <th class="sticky top-0 px-2 py-1 whitespace-nowrap bg-[#050814] bg-opacity-95 text-[11px] uppercase tracking-wide text-gray-400">Evento Code</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
@@ -269,6 +272,8 @@
                     <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.powerSupply }}</td>
                     <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.odometroTotal }}</td>
                     <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.odometroReporte }}</td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.event_name }}</td>
+                    <td class="px-2 py-1 align-top whitespace-nowrap">{{ d.event_code }}</td>
                   </tr>
                 </tbody>
               </table>
