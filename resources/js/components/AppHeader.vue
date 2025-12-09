@@ -53,18 +53,34 @@
       >
         <a
           href="/shares"
-          class="block w-full text-left px-3 py-2 hover:bg-white/5 text-gray-200"
+          class="block w-full text-left px-3 py-2 hover:bg-white/5 text-gray-200 flex items-center justify-between gap-2"
           @click="menuOpen = false"
         >
-          Compartidos
+          <span class="flex items-center gap-2">
+            <Share2 class="w-3.5 h-3.5" />
+            <span>Compartidos</span>
+          </span>
+        </a>
+        <a
+          href="/configuracion"
+          class="block w-full text-left px-3 py-2 hover:bg-white/5 text-gray-200 flex items-center justify-between gap-2"
+          @click="menuOpen = false"
+        >
+          <span class="flex items-center gap-2">
+            <Settings class="w-3.5 h-3.5" />
+            <span>Configuración</span>
+          </span>
         </a>
         <button
           type="button"
-          class="w-full text-left px-3 py-2 hover:bg-white/5 text-gray-200 flex items-center justify-between"
+          class="w-full text-left px-3 py-2 hover:bg-white/5 text-gray-200 flex items-center justify-between gap-2"
           :disabled="loading"
           @click="onClickLogout"
         >
-          <span>Cerrar sesión</span>
+          <span class="flex items-center gap-2">
+            <LogOut class="w-3.5 h-3.5" />
+            <span>Cerrar sesión</span>
+          </span>
         </button>
       </div>
     </div>
@@ -73,7 +89,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Bell } from 'lucide-vue-next'
+import { Bell, Settings, Share2, LogOut } from 'lucide-vue-next'
 import CustomerSwitcher from '@/components/CustomerSwitcher.vue'
 
 const props = defineProps({

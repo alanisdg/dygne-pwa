@@ -38,6 +38,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import axios from 'axios'
 import AppHeader from '@/components/AppHeader.vue'
 
 const email = ref('')
@@ -52,17 +53,12 @@ onMounted(async () => {
     const token = localStorage.getItem('auth_token')
     if (!token) throw new Error('Sin token de autenticación')
 
-    const res = await fetch('https://app.dygne.com/api/pwa/all', {
-      method: 'GET',
+    const { data, status } = await axios.get('https://app.dygne.com/api/pwa/all', {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
       },
-      mode: 'cors',
     })
-
-    if (!res.ok) throw new Error(`Error ${res.status} al obtener notificaciones`)
-    const data = await res.json()
 
     notifications.value = Array.isArray(data) ? data : (data.data || [])
   } catch (e) {

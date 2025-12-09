@@ -27,3 +27,7 @@ Route::get('/notifications', function () {
 Route::get('/shares', function () {
     return Inertia::render('Shares');
 })->name('shares.index');
+
+Route::get('/configuracion', function () {
+    return Inertia::render('Configuracion');
+})->name('configuracion.index');
