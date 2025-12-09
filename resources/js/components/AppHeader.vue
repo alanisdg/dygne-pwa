@@ -50,6 +50,13 @@
         v-if="menuOpen"
         class="absolute right-0 top-full mt-2 w-40 rounded-xl bg-[#050814] border border-white/10 shadow-lg py-1 text-sm z-20"
       >
+        <a
+          href="/shares"
+          class="block w-full text-left px-3 py-2 hover:bg-white/5 text-gray-200"
+          @click="menuOpen = false"
+        >
+          Compartidos
+        </a>
         <button
           type="button"
           class="w-full text-left px-3 py-2 hover:bg-white/5 text-gray-200 flex items-center justify-between"

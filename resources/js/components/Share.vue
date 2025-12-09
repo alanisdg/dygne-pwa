@@ -2,7 +2,7 @@
   <button
     type="button"
     class="px-3 py-1.5 bg-emerald-600 text-white rounded text-xs hover:bg-emerald-700 disabled:opacity-60"
-    :disabled="busy || !media || !media.url"
+    :disabled="busy || (!isDevicesMode && (!media || !media.url))"
     @click="onShare"
   >
     {{ busy ? 'Compartiendo…' : 'Compartir' }}
@@ -13,10 +13,14 @@
 import { ref, computed } from 'vue'
 
 const props = defineProps({
-  media: { type: Object, required: true },
+  media: { type: Object, required: false },
+  devices: { type: Array, required: false, default: () => [] },
 })
 
 const busy = ref(false)
+
+const isDevicesMode = computed(() => Array.isArray(props.devices) && props.devices.length > 0)
+
 const shareUrl = computed(() => props.media?.url || '')
 const shareTitle = computed(() => (props.media?.type || 'Media'))
 const shareText = computed(() => {
@@ -28,6 +32,13 @@ const shareText = computed(() => {
 })
 
 async function onShare() {
+  if (isDevicesMode.value) {
+    const names = props.devices.map(d => d.name || 'Sin nombre')
+    const message = `Dispositivos seleccionados:\n${names.join('\n')}`
+    alert(message)
+    return
+  }
+
   if (!shareUrl.value) return
   try {
     busy.value = true

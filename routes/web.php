@@ -23,3 +23,7 @@ Route::get('/notification/{id}', function (string $id) {
 Route::get('/notifications', function () {
     return Inertia::render('Notifications');
 })->name('notifications.index');
+
+Route::get('/shares', function () {
+    return Inertia::render('Shares');
+})->name('shares.index');
