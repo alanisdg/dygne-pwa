@@ -35,7 +35,7 @@
           <div
             v-for="d in filtered"
             :key="d.id"
-            class="block rounded-2xl bg-[#050814] border px-5 py-4 transition-colors cursor-pointer select-none"
+            class="block rounded-2xl bg-[#050814] border px-5 py-4 transition-colors cursor-pointer select-none relative"
             :class="isDeviceSelected(d.id)
               ? 'border-emerald-400/80 shadow-[0_0_0_1px_rgba(16,185,129,0.5)] bg-emerald-500/10'
               : 'border-blue-500/40 hover:border-blue-400/80 shadow-[0_0_0_1px_rgba(37,99,235,0.2)]'"
@@ -50,6 +50,10 @@
               <div class="space-y-1">
                 <p class="text-base font-semibold text-blue-200 tracking-tight">{{ d.name || 'Sin nombre' }}</p>
                 <p class="text-xs text-gray-500">IMEI: {{ d.imei }}</p>
+              </div>
+              <div class="absolute top-3 right-3 flex items-center justify-center w-7 h-7 rounded-full border border-white/15 bg-black/40">
+                <Camera v-if="d.has_camera" class="w-3.5 h-3.5 text-emerald-300" />
+                <CameraOff v-else class="w-3.5 h-3.5 text-gray-500" />
               </div>
              </div>
 
@@ -162,6 +166,30 @@
         </div>
       </div>
 
+      <div class="text-xs text-gray-300">
+        <p class="mb-1">Elige qué dispositivos incluir en la liga:</p>
+        <div class="max-h-40 overflow-y-auto rounded-lg border border-white/10 bg-black/20 px-2 py-2 space-y-1">
+          <div
+            v-for="dev in selectedDevices"
+            :key="dev.id"
+            class="flex items-center gap-2 text-[11px] text-gray-200"
+          >
+            <input
+              v-model="shareDeviceIds"
+              :value="dev.id"
+              type="checkbox"
+              class="w-3.5 h-3.5 rounded border border-white/20 bg-black"
+            />
+            <span class="truncate">
+              {{ dev.name || 'Sin nombre' }} (ID {{ dev.id }})
+            </span>
+          </div>
+          <div v-if="!selectedDevices.length" class="text-gray-500 text-[11px]">
+            No hay dispositivos seleccionados.
+          </div>
+        </div>
+      </div>
+
       <div v-if="shareError" class="text-xs text-red-400">
         {{ shareError }}
       </div>
@@ -197,7 +225,7 @@
         <button
           type="button"
           class="px-3 py-1.5 rounded-full text-xs bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
-          :disabled="shareGenerating || !selectedDeviceIds.length"
+          :disabled="shareGenerating || !shareDeviceIds.length"
           @click="generateShareUrl"
         >
           {{ shareGenerating ? 'Generando…' : 'Generar link' }}
@@ -213,7 +241,7 @@ import { router } from '@inertiajs/vue3'
 import LastUpdateBadge from '@/components/LastUpdateBadge.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import io from 'socket.io-client'
-import { Gauge, CirclePower } from 'lucide-vue-next'
+import { Gauge, CirclePower, Camera, CameraOff } from 'lucide-vue-next'
 
 const email = ref('')
 
@@ -231,6 +259,7 @@ const shareHours = ref(1)
 const shareGenerating = ref(false)
 const shareUrl = ref('')
 const shareError = ref('')
+const shareDeviceIds = ref([])
 
 const filtered = computed(() => {
   const term = q.value.trim().toLowerCase()
@@ -271,6 +300,8 @@ function openShareModal() {
   shareError.value = ''
   shareUrl.value = ''
   shareHours.value = 1
+  // Inicializar la selección del modal con los dispositivos actualmente seleccionados
+  shareDeviceIds.value = selectedDeviceIds.value.slice()
   showShareModal.value = true
 }
 
@@ -282,7 +313,7 @@ async function generateShareUrl() {
   try {
     shareError.value = ''
     shareUrl.value = ''
-    if (!selectedDeviceIds.value.length) {
+    if (!shareDeviceIds.value.length) {
       shareError.value = 'No hay dispositivos seleccionados.'
       return
     }
@@ -296,7 +327,7 @@ async function generateShareUrl() {
     shareGenerating.value = true
 
     const body = {
-      device_ids: selectedDeviceIds.value,
+      device_ids: shareDeviceIds.value,
       hours: Number(shareHours.value) || 1,
     }
 

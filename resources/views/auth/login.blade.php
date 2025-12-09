@@ -182,9 +182,14 @@
                     localStorage.setItem('auth_token', data.access_token);
 
                     try {
-                        // Guardar user completo si viene en la respuesta
+                        // Guardar user completo si viene en la respuesta, asegurando que role_id exista
                         if (data.user) {
-                            localStorage.setItem('auth_user', JSON.stringify(data.user));
+                            const rawUser = data.user;
+                            const normalizedRoleId = (typeof rawUser.role_id !== 'undefined')
+                                ? rawUser.role_id
+                                : (typeof rawUser.roleId !== 'undefined' ? rawUser.roleId : null);
+                            const userToStore = Object.assign({}, rawUser, { role_id: normalizedRoleId });
+                            localStorage.setItem('auth_user', JSON.stringify(userToStore));
                         }
                         // Guardar customer completo si viene en la respuesta raíz
                         if (data.customer) {

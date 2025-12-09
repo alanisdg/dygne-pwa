@@ -21,6 +21,7 @@
       >
         <Bell class="w-4 h-4" />
       </a>
+      <CustomerSwitcher v-if="isAdmin" />
 
       <div class="flex flex-col items-end gap-1">
         <button
@@ -73,6 +74,7 @@
 <script setup>
 import { ref } from 'vue'
 import { Bell } from 'lucide-vue-next'
+import CustomerSwitcher from '@/components/CustomerSwitcher.vue'
 
 const props = defineProps({
   title: {
@@ -94,13 +96,21 @@ const message = ref('')
 const messageClass = ref('text-gray-600')
 const menuOpen = ref(false)
 const customerName = ref('')
+const isAdmin = ref(false)
 
-// Cargar nombre de cliente desde localStorage si existe
+// Cargar nombre de cliente y rol desde localStorage si existe
 try {
   const storedCustomerName = localStorage.getItem('auth_customer_name')
   customerName.value = storedCustomerName || ''
+
+  const rawUser = localStorage.getItem('auth_user')
+  if (rawUser) {
+    const parsed = JSON.parse(rawUser)
+    const roleId = parsed?.role_id ?? parsed?.roleId
+    isAdmin.value = Number(roleId) === 1
+  }
 } catch (e) {
-  console.warn('[Header] No se pudo leer auth_customer_name', e)
+  console.warn('[Header] No se pudo leer auth_customer_name o auth_user', e)
 }
 
 function toggleMenu() {

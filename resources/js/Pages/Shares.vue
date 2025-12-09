@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-black text-gray-100">
     <div class="max-w-4xl mx-auto px-4 py-4">
-      <AppHeader title="Compartidos" />
+      <AppHeader title="Compartidos" :email="headerEmail" />
 
       <div class="mt-4 text-sm text-gray-300 space-y-4">
         <div v-if="loading" class="text-gray-400">Cargando shares…</div>
@@ -157,6 +157,17 @@ import AppHeader from '@/components/AppHeader.vue'
 const sharesPage = ref(null)
 const loading = ref(false)
 const error = ref('')
+const headerEmail = ref('')
+
+onMounted(async () => {
+  try {
+    headerEmail.value = localStorage.getItem('auth_email') || ''
+  } catch (e) {
+    console.warn('[Shares] No se pudo leer auth_email de localStorage', e)
+  }
+
+  await fetchShares()
+})
 
 const showEditModal = ref(false)
 const editingShare = ref(null)
