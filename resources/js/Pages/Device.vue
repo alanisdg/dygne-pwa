@@ -647,7 +647,7 @@ socketCalamp.on('drop', (drop) => {
 
 async function loadGoogleMaps() {
   if (window.google && window.google.maps) return window.google.maps
-  const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+  const key = "AIzaSyCeXjwxFHCE0lo_iaAV27UZf4hzVxmFcgs"
   if (!key) return null
   return new Promise((resolve, reject) => {
     const cbName = '__gmaps_cb_' + Math.random().toString(36).slice(2)
