@@ -320,6 +320,7 @@
             :lastdrop="lastdrop"
             :externalMapUrl="externalMapUrl"
             :error="error"
+            :device="device"
           />
           <div v-else-if="activeTab === 'media'" class="p-4 sm:p-5">
             <DeviceMedia
@@ -372,6 +373,7 @@ const error = ref('')
 const lastdrop = ref(null)
 const drops = ref([])
 const media = ref([])
+const device = ref(null)
 const mapEl = ref(null)
 let gmap = null
 let routePolyline = null
@@ -604,6 +606,7 @@ socketCalamp.on('drop', (drop) => {
     name.value = dev?.name || name.value || ''
     lastdrop.value = dev?.lastdrop || null
     deviceImei.value = dev?.imei || ''
+    device.value = dev || null
     if (name.value) sessionStorage.setItem(cacheKey, name.value)
 
     console.log(`escuchando gps_response_${deviceImei.value}`)
@@ -1005,10 +1008,18 @@ function toggleDropMarkers() {
   if (gmap) drawRouteAndMedia()
 }
 
-function toApiDateTime(localValue) {
+function toApiDate(localValue) {
   // localValue expected format: 'YYYY-MM-DDTHH:MM'
+  // Returns only the date part: 'YYYY-MM-DD'
   if (!localValue) return ''
-  return localValue.replace('T', ' ') + ':00'
+  return localValue.split('T')[0]
+}
+
+function toApiTime(localValue) {
+  // localValue expected format: 'YYYY-MM-DDTHH:MM'
+  // Returns only the time part: 'HH:MM'
+  if (!localValue) return ''
+  return localValue.split('T')[1] || '00:00'
 }
 
 function toLocalInputValue(date) {
@@ -1055,15 +1066,17 @@ async function onSubmitRange() {
     loadingRange.value = true
     const token = localStorage.getItem('auth_token')
     if (!token) throw new Error('Sin token de autenticación')
-    const start_date = toApiDateTime(startDateLocal.value)
-    const end_date = toApiDateTime(endDateLocal.value)
+    const start_date = toApiDate(startDateLocal.value)
+    const end_date = toApiDate(endDateLocal.value)
+    const start_time = toApiTime(startDateLocal.value)
+    const end_time = toApiTime(endDateLocal.value)
     const url = `https://app.dygne.com/api/reports/${props.id}`
     const res = await axios.get(url, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
       },
-      params: { start_date, end_date },
+      params: { start_date, end_date, start_time, end_time },
     })
     console.log('reports range response', res)
     const data = res.data
@@ -1075,7 +1088,7 @@ async function onSubmitRange() {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
       },
-      params: { start_date, end_date, type: 'request' },
+      params: { start_date, end_date, start_time, end_time, type: 'request' },
     })
     const dataReq = resReq.data
     requestedMedia.value = Array.isArray(dataReq?.media) ? dataReq.media : []

@@ -15,6 +15,17 @@
         </button>
       </div>
 
+      <div class="mb-4 flex justify-end">
+        <button
+          type="button"
+          class="px-3 py-1.5 text-xs rounded-lg bg-white text-black font-medium hover:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed"
+          :disabled="!imei || loadingVideo"
+          @click="requestInstantVideo"
+        >
+          Solicitar Video Foto
+        </button>
+      </div>
+
       <div class="flex items-center justify-between gap-2 mb-4">
         <p class="text-xs text-gray-400 break-all">
           IMEI: {{ imei || '—' }}
@@ -273,7 +284,7 @@ async function requestVideo() {
   if (videoSide.value === 'interior') cameraFlag = '2'
 
   const command = `camreq:0,${cameraFlag},${timestamp},${videoSeconds.value},144.126.211.5,3001`
-  const url = `https://app.dygne.com/api/devices/${encodeURIComponent(props.imei)}/send-command?command=${encodeURIComponent(command)}`
+  const url = `https://app.dygne.com/api/devices/${encodeURIComponent(props.imei)}/send-command?command=${encodeURIComponent(command)}&mode=camera`
 
   loadingVideo.value = true
 
@@ -304,6 +315,54 @@ async function requestVideo() {
   }
 }
 
+async function requestInstantVideo() {
+  if (!props.imei || loadingVideo.value) return
+
+  const token = window.localStorage.getItem('auth_token')
+  if (!token) {
+    console.error('No se encontró auth_token en localStorage')
+    return
+  }
+
+  const nowSeconds = Math.floor(Date.now() / 1000)
+
+  let cameraFlag = '1'
+  if (videoSide.value === 'interior') cameraFlag = '2'
+
+  const command = `camreq:0,${cameraFlag},${nowSeconds},1,144.126.211.5,3001`
+  const url = `https://app.dygne.com/api/devices/${encodeURIComponent(props.imei)}/send-command?command=${encodeURIComponent(command)}&mode=videophoto`
+
+  loadingVideo.value = true
+
+  try {
+    const response = await axios.post(
+      url,
+      null,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        }
+      }
+    )
+
+    const data = response?.data
+    console.log('requestInstantVideo response', data)
+
+    alert('La solicitud se ha enviado. Cuando se procese la foto/video, recibirás una notificación.')
+
+    if (data && data.success === true) { 
+      close()
+    } else {
+      console.warn('Solicitud de video instantáneo sin success=true', data)
+    }
+  } catch (err) {
+    console.error('Error solicitando video instantáneo', err)
+  } finally {
+    loadingVideo.value = false
+  }
+}
+
 async function requestPhoto() {
   if (!props.imei || loadingPhoto.value || checkingAvailability.value || deviceBusy.value) return
 
@@ -317,7 +376,7 @@ async function requestPhoto() {
   let commandSuffix = '1,1'
   if (photoSide.value === 'interior') commandSuffix = '1,2'
   else if (photoSide.value === 'both') commandSuffix = '1,3'
-  const url = `https://app.dygne.com/api/devices/${encodeURIComponent(props.imei)}/send-command?command=camreq:${commandSuffix}`
+  const url = `https://app.dygne.com/api/devices/${encodeURIComponent(props.imei)}/send-command?command=camreq:${commandSuffix}&mode=photo`
   
   try {
     const response = await axios.post(

@@ -25,9 +25,7 @@
         <div class="flex-1">
           <p class="text-sm font-medium text-gray-100 truncate">{{ displayLabel(m) }}</p>
           <p class="text-xs text-gray-400">{{ m.captured_at || m.update_time || m.time || '' }}</p>
-            <p v-if="m?.upload_time" class="text-xs text-gray-400">
-              Tiempo de descarga: {{ m.upload_time }}
-            </p>
+            {{ m.trigger_source }}
           <p v-if="m.latitude != null && m.longitude != null" class="text-xs text-gray-500">{{ m.latitude }}, {{ m.longitude }}</p>
         </div>
       </button>
@@ -53,16 +51,19 @@ onMounted(async () => {
   try {
     const token = window.localStorage.getItem('auth_token')
     if (!token) throw new Error('Sin token de autenticación')
-    const res = await axios.get('https://app.dygne.com/api/media?imei='+props.imei,null, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json'
-      },
-      params: {
-        trigger_source: 'SERVER REQUEST (0)',
-        imei: props.imei
+    const res = await axios.get(
+      'https://app.dygne.com/api/media',
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json'
+        },
+        params: {
+          imei: props.imei,
+          trigger_source: 'SERVER REQUEST (0)'
+        }
       }
-    })
+    )
 
     const data = res.data
     console.log('la data')

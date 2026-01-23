@@ -3,7 +3,7 @@
     <p v-if="error" class="text-red-400 text-sm">{{ error }}</p>
     <template v-else>
       <div class="flex items-center justify-between">
-        <p class="text-sm text-gray-300">Nombre: <span class="font-medium text-gray-100">{{ name || '(sin nombre)' }}</span></p>
+        <p class="text-sm text-gray-300">Nombre: <span class="font-medium text-gray-100">{{ name || '(sin nombre)' }}<span v-if="device && device.imei"> - {{ device.imei }}</span></span></p>
         <a v-if="lastdrop" :href="externalMapUrl" target="_blank" class="text-xs sm:text-sm text-blue-300 hover:text-blue-200 hover:underline">Abrir en Maps</a>
       </div>
 
@@ -86,6 +86,7 @@ const props = defineProps({
   lastdrop: Object,
   externalMapUrl: String,
   error: String,
+  device: Object,
 })
 
 const satCount = computed(() => {

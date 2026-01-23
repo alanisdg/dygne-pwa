@@ -74,9 +74,7 @@
               ID: {{ m.id }}
             </p>
 
-            <p v-if="m && m.upload_time" class="text-xs text-gray-400">
-              Tiempo de descarga: {{ m.upload_time }}
-            </p>
+           
 
             <p
               v-if="m && m.latitude != null && m.longitude != null"
