@@ -9,7 +9,7 @@
       </div>
 
       <!-- Top half: Map -->
-      <div class="h-[50vh] bg-[#050814]  overflow-hidden border border-white/5">
+      <div class="h-[50vh] bg-[#0f1418]  overflow-hidden border border-white/5">
         <div v-if="hasAnyCoords" class="h-full w-full">
           <div ref="mapEl" class="h-full w-full"></div>
         </div>
@@ -19,7 +19,7 @@
       </div>
 
       <!-- Report range: quick + custom tabs -->
-      <div class="bg-[#050814] border border-white/5 shadow-sm rounded-b-3xl sm:rounded-3xl p-4 sm:p-5 mt-0 sm:mt-4">
+      <div class="bg-[#0f1418] border border-white/5 shadow-sm rounded-b-3xl sm:rounded-3xl p-4 sm:p-5 mt-0 sm:mt-4">
         <!-- Tabs -->
         <div class="border-b border-white/10 mb-4 flex gap-3 text-sm">
           <button
@@ -181,7 +181,7 @@
       <!-- Media modal -->
       <div v-if="showMediaModal && selectedMedia" class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-black/70" @click="closeMediaModal"></div>
-        <div class="relative bg-[#050814] border border-white/10 rounded-2xl shadow-xl max-w-2xl w-[92vw] sm:w-[600px] overflow-hidden">
+        <div class="relative bg-[#0f1418] border border-white/10 rounded-2xl shadow-xl max-w-2xl w-[92vw] sm:w-[600px] overflow-hidden">
           <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
             <h3 class="text-sm font-medium text-gray-100">Detalle de media</h3>
             <div class="flex items-center gap-2">
@@ -283,7 +283,7 @@
       </div>
 
       <!-- Tabs -->
-      <div class="bg-[#050814] border border-white/5 shadow-sm rounded-t-3xl sm:rounded-3xl -mt-4 sm:mt-4 relative z-10">
+      <div class="bg-[#0f1418] border border-white/5 shadow-sm rounded-t-3xl sm:rounded-3xl -mt-4 sm:mt-4 relative z-10">
         <div class="border-b border-white/10 px-4 sm:px-5 pt-4">
           <div class="flex gap-3">
             <button

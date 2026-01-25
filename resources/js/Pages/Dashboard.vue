@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-black text-gray-100">
+  <div class="min-h-screen bg-[#0f1418] text-gray-100">
     <div class="max-w-3xl mx-auto px-4 ">
       <!-- Header -->
-      <div class="bg-[#020617] border border-white/5 px-4 py-3 mb-5 flex flex-col gap-1">
+      <div class="px-4 py-3 mb-5 flex flex-col gap-1">
         
         <AppHeader class="mt-1" title="Dashboard" :email="email" />
       </div>
@@ -11,10 +11,7 @@
       <div class="space-y-4">
         <div class="flex items-center justify-between px-1">
           <div class="flex items-center gap-2">
-            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10 text-blue-400 text-sm">
-              ⎍
-            </span>
-            <h2 class="text-lg font-semibold">Dispositivos</h2>
+             
           </div>
           <span class="text-xs text-gray-400" v-if="filtered.length">{{ filtered.length }} activos</span>
         </div>
@@ -35,10 +32,10 @@
           <div
             v-for="d in filtered"
             :key="d.id"
-            class="block rounded-2xl bg-[#050814] border px-5 py-4 transition-colors cursor-pointer select-none relative"
+            class="block rounded-lg bg-[#1e2734] border px-5 py-4 transition-colors cursor-pointer select-none relative"
             :class="isDeviceSelected(d.id)
               ? 'border-emerald-400/80 shadow-[0_0_0_1px_rgba(16,185,129,0.5)] bg-emerald-500/10'
-              : 'border-blue-500/40 hover:border-blue-400/80 shadow-[0_0_0_1px_rgba(37,99,235,0.2)]'"
+              : 'border-[#161c25] hover:border-[#1e2630]'"
             @click="handleCardClick(d)"
             @mousedown.passive="onPressStart($event, d)"
             @touchstart.passive="onPressStart($event, d)"

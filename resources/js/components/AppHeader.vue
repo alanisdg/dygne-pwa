@@ -8,9 +8,7 @@
       >
         ← Volver
       </a>
-      <h1 class="text-xl font-semibold tracking-tight">
-        {{ title }}
-      </h1>
+      <img src="/images/icons/logo.png" alt="Logo" class="h-8" />
     </div>
 
     <div class="flex items-center gap-3 relative">

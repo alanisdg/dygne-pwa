@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-t-3xl sm:rounded-3xl bg-[#050814] border border-white/5 shadow-sm p-4 sm:p-5 -mt-4 sm:mt-4 relative z-10 text-gray-100">
+  <div class="rounded-t-3xl sm:rounded-3xl bg-[#0f1418] border border-white/5 shadow-sm p-4 sm:p-5 -mt-4 sm:mt-4 relative z-10 text-gray-100">
     <p v-if="error" class="text-red-400 text-sm">{{ error }}</p>
     <template v-else>
       <div class="flex items-center justify-between">
