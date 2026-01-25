@@ -16,6 +16,7 @@
       </div>
 
       <div class="mb-4 flex justify-end">
+        <!--
         <button
           type="button"
           class="px-3 py-1.5 text-xs rounded-lg bg-white text-black font-medium hover:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -24,6 +25,7 @@
         >
           Solicitar Video Foto
         </button>
+        -->
       </div>
 
       <div class="flex items-center justify-between gap-2 mb-4">

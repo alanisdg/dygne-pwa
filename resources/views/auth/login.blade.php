@@ -27,7 +27,7 @@
     </style>
 </head>
 <body class="min-h-screen bg-gray-100 text-gray-900 antialiased flex items-center justify-center p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))]">
-    <div class="w-full max-w-sm">
+    <div class="w-full max-w-md">
         <div class="mb-8 text-center">
             <div class="flex justify-center mb-4">
                 <video
