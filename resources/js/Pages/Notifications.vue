@@ -19,9 +19,9 @@
             <div class="flex items-start justify-between gap-3">
               <div class="space-y-0.5">
                 <p class="text-sm font-medium text-gray-100 truncate">
-                  {{ n.action || 'Notificación' }}
+                 {{ n.device.name }} {{ n.action || 'Notificación' }}
                 </p>
-                <p class="text-xs text-gray-400">
+                <p class="text-xs text-gray-400"> 
                   IMEI: {{ n.imei }} · Lat: {{ n.lat }} · Lng: {{ n.lng }}
                 </p>
               </div>

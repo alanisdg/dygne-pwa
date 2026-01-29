@@ -37,7 +37,13 @@ const label = computed(() => {
   if (diffSec < 60) return `${diffSec} segs`
   const diffMin = Math.floor(diffSec / 60)
   if (diffMin === 1) return 'Hace 1 min'
-  return `Hace ${diffMin} min`
+  if (diffMin < 60) return `Hace ${diffMin} min`
+  const diffHours = Math.floor(diffMin / 60)
+  if (diffHours === 1) return 'Hace 1 hora'
+  if (diffHours < 24) return `Hace ${diffHours} horas`
+  const diffDays = Math.floor(diffHours / 24)
+  if (diffDays === 1) return 'Hace 1 día'
+  return `Hace ${diffDays} días`
 })
 
 onMounted(() => {

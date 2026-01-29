@@ -81,8 +81,10 @@
             <input
               v-model="startDateLocal"
               type="datetime-local"
+              inputmode="none"
               class="w-full border border-white/10 bg-black rounded px-3 py-2 text-sm text-gray-100"
               @click="openNativePicker('start', $event)"
+              @focus="$event.target.blur(); openNativePicker('start', $event)"
             />
           </div>
           <div class="sm:col-span-2">
@@ -90,9 +92,10 @@
             <input
               v-model="endDateLocal"
               type="datetime-local"
+              inputmode="none"
               class="w-full border border-white/10 bg-black rounded px-3 py-2 text-sm text-gray-100"
               @click="openNativePicker('end', $event)"
-            />
+              @focus="$event.target.blur(); openNativePicker('end', $event)"
           </div>
           <div class="sm:col-span-4 flex flex-wrap items-center gap-2">
             <button
@@ -650,7 +653,7 @@ socketCalamp.on('drop', (drop) => {
 
 async function loadGoogleMaps() {
   if (window.google && window.google.maps) return window.google.maps
-  const key = "AIzaSyCeXjwxFHCE0lo_iaAV27UZf4hzVxmFcgs"
+  const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   if (!key) return null
   return new Promise((resolve, reject) => {
     const cbName = '__gmaps_cb_' + Math.random().toString(36).slice(2)
@@ -913,10 +916,13 @@ function locateMediaOnMap(m) {
   const pos = { lat: Number(lat), lng: Number(lng) }
   gmap.panTo(pos)
   gmap.setZoom(10)
-  try {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  } catch (e) {
-    // ignore if not in browser
+  // Solo hacer scroll en desktop para evitar comportamiento extraño en móviles
+  if (window.innerWidth >= 640) {
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (e) {
+      // ignore if not in browser
+    }
   }
 }
 
