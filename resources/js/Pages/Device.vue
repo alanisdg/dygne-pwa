@@ -369,7 +369,10 @@ import io from 'socket.io-client'
  
  
 
-const props = defineProps({ id: String })
+const props = defineProps({
+  id: String,
+  liveMoving: { type: Boolean, default: true },
+})
 const name = ref('')
 const loading = ref(true)
 const error = ref('')
@@ -384,6 +387,7 @@ let photoMarkers = []
 let videoMarkers = []
 let lastDropMarker = null
 let lastDropInfoWindow = null
+let markerAnimationId = null
 let dropMarkers = []
 const deviceImei = ref('')
 const startDateLocal = ref('')
@@ -485,15 +489,19 @@ socket.on('drop', (drop) => {
     if (gmap) drawRouteAndMedia()
     const pos = { lat: Number(drop.lat), lng: Number(drop.lng) }
     if (lastDropMarker) {
-      lastDropMarker.setPosition(pos)
-      const currentIcon = lastDropMarker.getIcon()
-      if (currentIcon && typeof currentIcon === 'object') {
-        lastDropMarker.setIcon({
-          ...currentIcon,
-          rotation: Number(drop.heading) || 0,
-        })
+      if (props.liveMoving) {
+        moveMarkerWithAnimation(lastDropMarker, drop, true)
+      } else {
+        lastDropMarker.setPosition(pos)
+        const currentIcon = lastDropMarker.getIcon()
+        if (currentIcon && typeof currentIcon === 'object') {
+          lastDropMarker.setIcon({
+            ...currentIcon,
+            rotation: Number(drop.heading) || 0,
+          })
+        }
+        if (gmap) gmap.panTo(pos)
       }
-      if (gmap) gmap.panTo(pos)
     } else if (gmap) {
       const maps = window.google.maps
       lastDropMarker = new maps.Marker({
@@ -554,15 +562,19 @@ socketCalamp.on('drop', (drop) => {
     if (gmap) drawRouteAndMedia()
     const pos = { lat: Number(drop.lat), lng: Number(drop.lng) }
     if (lastDropMarker) {
-      lastDropMarker.setPosition(pos)
-      const currentIcon = lastDropMarker.getIcon()
-      if (currentIcon && typeof currentIcon === 'object') {
-        lastDropMarker.setIcon({
-          ...currentIcon,
-          rotation: Number(drop.heading) || 0,
-        })
+      if (props.liveMoving) {
+        moveMarkerWithAnimation(lastDropMarker, drop, true)
+      } else {
+        lastDropMarker.setPosition(pos)
+        const currentIcon = lastDropMarker.getIcon()
+        if (currentIcon && typeof currentIcon === 'object') {
+          lastDropMarker.setIcon({
+            ...currentIcon,
+            rotation: Number(drop.heading) || 0,
+          })
+        }
+        if (gmap) gmap.panTo(pos)
       }
-      if (gmap) gmap.panTo(pos)
     } else if (gmap) {
       const maps = window.google.maps
       lastDropMarker = new maps.Marker({
@@ -650,6 +662,79 @@ socketCalamp.on('drop', (drop) => {
     loading.value = false
   }
 })
+
+function haversineDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371000 // Earth radius in meters
+  const toRad = (x) => (x * Math.PI) / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+function animateMarkerTo(marker, fromLat, fromLng, toLat, toLng, durationMs, heading) {
+  if (markerAnimationId) {
+    cancelAnimationFrame(markerAnimationId)
+    markerAnimationId = null
+  }
+  const startTime = performance.now()
+  const maps = window.google?.maps
+  function step(currentTime) {
+    const elapsed = currentTime - startTime
+    const progress = Math.min(elapsed / durationMs, 1)
+    // Ease-out for smoother deceleration
+    const eased = 1 - Math.pow(1 - progress, 2)
+    const lat = fromLat + (toLat - fromLat) * eased
+    const lng = fromLng + (toLng - fromLng) * eased
+    marker.setPosition({ lat, lng })
+    if (progress < 1) {
+      markerAnimationId = requestAnimationFrame(step)
+    } else {
+      markerAnimationId = null
+      // Ensure final position and heading
+      marker.setPosition({ lat: toLat, lng: toLng })
+      if (maps && heading != null) {
+        const currentIcon = marker.getIcon()
+        if (currentIcon && typeof currentIcon === 'object') {
+          marker.setIcon({ ...currentIcon, rotation: Number(heading) || 0 })
+        }
+      }
+    }
+  }
+  markerAnimationId = requestAnimationFrame(step)
+}
+
+function moveMarkerWithAnimation(marker, drop, panMap = true) {
+  if (!marker) return
+  const fromPos = marker.getPosition()
+  const fromLat = fromPos.lat()
+  const fromLng = fromPos.lng()
+  const toLat = Number(drop.lat)
+  const toLng = Number(drop.lng)
+  const speedKmh = Number(drop.speed) || 0
+  const heading = Number(drop.heading) || 0
+
+  // Calculate distance (meters) and duration
+  const distanceM = haversineDistance(fromLat, fromLng, toLat, toLng)
+  let durationMs = 1000 // default 1 second
+  if (speedKmh > 0) {
+    const speedMs = speedKmh / 3.6 // km/h to m/s
+    durationMs = (distanceM / speedMs) * 1000
+    // Clamp duration between 500ms and 30s for UX
+    durationMs = Math.max(500, Math.min(durationMs, 30000))
+  }
+
+  console.log(`[liveMoving] animating marker: ${distanceM.toFixed(1)}m, ${speedKmh}km/h, duration=${durationMs.toFixed(0)}ms`)
+  animateMarkerTo(marker, fromLat, fromLng, toLat, toLng, durationMs, heading)
+
+  // Pan map smoothly
+  if (panMap && gmap) {
+    gmap.panTo({ lat: toLat, lng: toLng })
+  }
+}
 
 async function loadGoogleMaps() {
   if (window.google && window.google.maps) return window.google.maps

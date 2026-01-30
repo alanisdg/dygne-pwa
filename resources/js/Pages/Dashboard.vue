@@ -33,9 +33,12 @@
             v-for="d in filtered"
             :key="d.id"
             class="block rounded-lg bg-[#1e2734] border px-5 py-4 transition-colors cursor-pointer select-none relative"
-            :class="isDeviceSelected(d.id)
-              ? 'border-emerald-400/80 shadow-[0_0_0_1px_rgba(16,185,129,0.5)] bg-emerald-500/10'
-              : 'border-[#161c25] hover:border-[#1e2630]'"
+            :class="[
+              isDeviceSelected(d.id)
+                ? 'border-emerald-400/80 shadow-[0_0_0_1px_rgba(16,185,129,0.5)] bg-emerald-500/10'
+                : 'border-[#161c25] hover:border-[#1e2630]',
+              isDeviceMoving(d) ? 'device-moving' : ''
+            ]"
             @click="handleCardClick(d)"
             @mousedown.passive="onPressStart($event, d)"
             @touchstart.passive="onPressStart($event, d)"
@@ -407,6 +410,11 @@ function getSatColorClass(d) {
   return 'bg-emerald-400'
 }
 
+function isDeviceMoving(d) {
+  const speed = Number(d?.lastdrop?.speed ?? 0)
+  return !Number.isNaN(speed) && speed > 0
+}
+
 const LONG_PRESS_MS = 600
 const longPressTimer = ref(null)
 const lastInteractionWasLongPress = ref(false)
@@ -557,3 +565,35 @@ async function fetchDevices() {
   }
 }
 </script>
+
+<style scoped>
+.device-moving {
+  overflow: hidden;
+}
+
+.device-moving::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 0.5rem;
+  background: rgb(11 157 245 / 18%);
+  opacity: 0;
+  animation: deviceMovingBlink 2s ease-in-out infinite;
+  z-index: 0;
+}
+
+.device-moving > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes deviceMovingBlink {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+</style>
