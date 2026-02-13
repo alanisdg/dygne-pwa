@@ -31,3 +31,7 @@ Route::get('/shares', function () {
 Route::get('/configuracion', function () {
     return Inertia::render('Configuracion');
 })->name('configuracion.index');
+
+Route::get('/instalar-equipo', function () {
+    return Inertia::render('InstalarEquipo');
+})->name('instalar-equipo.index');

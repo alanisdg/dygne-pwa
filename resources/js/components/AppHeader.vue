@@ -85,6 +85,16 @@
             <span>Configuración</span>
           </span>
         </a>
+        <a
+          href="/instalar-equipo"
+          class="block w-full text-left px-3 py-2 hover:bg-white/5 text-gray-200 flex items-center justify-between gap-2"
+          @click="menuOpen = false"
+        >
+          <span class="flex items-center gap-2">
+            <Wrench class="w-3.5 h-3.5" />
+            <span>Instalar Equipo</span>
+          </span>
+        </a>
         <button
           type="button"
           class="w-full text-left px-3 py-2 hover:bg-white/5 text-gray-200 flex items-center justify-between gap-2"
@@ -103,7 +113,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Bell, Settings, Share2, LogOut, Sun, Moon } from 'lucide-vue-next'
+import { Bell, Settings, Share2, LogOut, Sun, Moon, Wrench } from 'lucide-vue-next'
 import CustomerSwitcher from '@/components/CustomerSwitcher.vue'
 import { useTheme } from '@/composables/useTheme'
 
