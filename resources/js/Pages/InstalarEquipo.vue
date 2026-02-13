@@ -101,9 +101,34 @@
               <p><span class="text-gray-400">GPS:</span> {{ monitorDrop.lat }}, {{ monitorDrop.lng }}</p>
             </div>
 
-            <div class="mt-2 text-xs">
-              <p v-if="mediaReceivingText" class="text-amber-300">{{ mediaReceivingText }}</p>
+            <div class="mt-2 text-xs space-y-2">
+              <p v-if="mediaReceivingText" class="text-amber-300 inline-flex items-center gap-1">
+                <Loader2 class="w-3.5 h-3.5 animate-spin" />
+                {{ mediaReceivingText }}
+              </p>
               <p v-else class="text-gray-400">Sin recepción de imagen/video en este momento.</p>
+
+              <div v-if="mediaLoading" class="text-gray-300 inline-flex items-center gap-1">
+                <Loader2 class="w-3.5 h-3.5 animate-spin" />
+                Cargando preview...
+              </div>
+
+              <div v-if="mediaPreview?.url" class="rounded-lg border border-white/10 p-2 bg-black/30">
+                <p class="text-[11px] text-gray-400 mb-1">Última media recibida</p>
+                <video
+                  v-if="String(mediaPreview.extension || '').toLowerCase() === '.mp4'"
+                  :src="mediaPreview.url"
+                  controls
+                  class="w-full rounded"
+                  preload="metadata"
+                ></video>
+                <img
+                  v-else
+                  :src="mediaPreview.url"
+                  alt="Media recibida"
+                  class="w-full rounded"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -133,7 +158,7 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import axios from 'axios'
 import io from 'socket.io-client'
-import { QrCode, CheckCircle2 } from 'lucide-vue-next'
+import { QrCode, CheckCircle2, Loader2 } from 'lucide-vue-next'
 import AppHeader from '@/components/AppHeader.vue'
 
 const API = 'https://app.dygne.com/api'
@@ -174,6 +199,9 @@ let qrDetector = null
 const monitorDrop = ref(null)
 const monitorFlash = ref(false)
 const mediaReceivingText = ref('')
+const mediaProgress = ref(null)
+const mediaLoading = ref(false)
+const mediaPreview = ref(null)
 
 let socketGps = null
 let socketCalamp = null
@@ -300,11 +328,33 @@ function setMonitorDrop(drop) {
   })
 }
 
+async function fetchLatestMedia(imei) {
+  if (!imei) return
+
+  mediaLoading.value = true
+  try {
+    const { data } = await axios.get(`${API}/media`, {
+      params: { imei, page: 1, limit: 1 },
+      headers: authHeaders(),
+    })
+
+    const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
+    mediaPreview.value = list[0] || null
+  } catch (_) {
+    // ignore preview errors
+  } finally {
+    mediaLoading.value = false
+  }
+}
+
 async function checkMediaProgress(imei) {
   if (!imei) {
     mediaReceivingText.value = ''
+    mediaProgress.value = null
     return
   }
+
+  const wasBusy = !!mediaReceivingText.value
 
   try {
     const { data } = await axios.get(`${API}/media/progress`, {
@@ -314,21 +364,34 @@ async function checkMediaProgress(imei) {
 
     const busy = data?.trigger?.status === true
     const type = String(data?.type ?? data?.trigger?.type ?? '').toLowerCase()
+    const progressValue = data?.progress ?? data?.trigger?.progress ?? null
+    mediaProgress.value = progressValue
 
     if (!busy) {
       mediaReceivingText.value = ''
+      if (wasBusy) {
+        await fetchLatestMedia(imei)
+      }
       return
     }
 
+    // Si arranca nueva recepción, ocultamos preview hasta terminar
+    if (!wasBusy) {
+      mediaPreview.value = null
+    }
+
+    const progressLabel = progressValue != null ? ` (${progressValue}%)` : ''
+
     if (type.includes('video')) {
-      mediaReceivingText.value = '🎥 Recibiendo video...'
+      mediaReceivingText.value = `🎥 Recibiendo video...${progressLabel}`
     } else if (type.includes('photo') || type.includes('image') || type.includes('foto')) {
-      mediaReceivingText.value = '📷 Recibiendo imagen...'
+      mediaReceivingText.value = `📷 Recibiendo imagen...${progressLabel}`
     } else {
-      mediaReceivingText.value = '📡 Recibiendo media...'
+      mediaReceivingText.value = `📡 Recibiendo media...${progressLabel}`
     }
   } catch (_) {
     mediaReceivingText.value = ''
+    mediaProgress.value = null
   }
 }
 
@@ -345,12 +408,15 @@ function stopMonitor() {
     clearInterval(mediaProgressInterval)
     mediaProgressInterval = null
   }
+  mediaLoading.value = false
 }
 
 function startMonitor(imei) {
   stopMonitor()
   monitorDrop.value = null
   mediaReceivingText.value = ''
+  mediaProgress.value = null
+  mediaPreview.value = null
 
   if (!imei) return
 
@@ -368,6 +434,7 @@ function startMonitor(imei) {
   socketCalamp.on('drop', handleDrop)
 
   checkMediaProgress(imei)
+  fetchLatestMedia(imei)
   mediaProgressInterval = setInterval(() => {
     checkMediaProgress(imei)
   }, 3000)
