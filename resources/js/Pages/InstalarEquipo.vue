@@ -5,18 +5,18 @@
 
       <div class="mt-4 rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
         <div class="space-y-2">
-          <div class="flex gap-2">
+          <div class="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 items-center">
             <input
               v-model.trim="searchQuery"
               type="text"
-              class="flex-1 rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm"
+              class="min-w-0 rounded-lg bg-black/40 border border-white/10 px-2 py-2 text-sm"
               placeholder="Buscar por IMEI o nombre"
             />
-            <button class="px-4 py-2 rounded-lg bg-blue-600 text-sm" @click="buscar" :disabled="loading">
+            <button class="px-3 py-2 rounded-lg bg-blue-600 text-sm whitespace-nowrap" @click="buscar" :disabled="loading">
               {{ loading ? 'Buscando...' : 'Buscar' }}
             </button>
             <button
-              class="px-3 py-2 rounded-lg bg-white/10 border border-white/15 text-xs flex items-center gap-1"
+              class="px-2 py-2 rounded-lg bg-white/10 border border-white/15 text-xs flex items-center gap-1 whitespace-nowrap"
               type="button"
               @click="openScanner"
               :disabled="loading"
