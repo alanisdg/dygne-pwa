@@ -75,6 +75,7 @@
             <span>Compartidos</span>
           </span>
         </a>
+        
         <a
           href="/configuracion"
           class="block w-full text-left px-3 py-2 hover:bg-white/5 text-gray-200 flex items-center justify-between gap-2"
