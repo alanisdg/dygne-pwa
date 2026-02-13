@@ -1,36 +1,36 @@
 <template>
-  <div class="rounded-t-3xl sm:rounded-3xl bg-[#0f1418] border border-white/5 shadow-sm p-4 sm:p-5 -mt-4 sm:mt-4 relative z-10 text-gray-100">
+  <div class="rounded-t-3xl sm:rounded-3xl border shadow-sm p-4 sm:p-5 -mt-4 sm:mt-4 relative z-10" :class="theme === 'light' ? 'bg-[#faf9f5] border-[#e6e2d8] text-gray-900' : 'bg-[#0f1418] border-white/5 text-gray-100'">
     <p v-if="error" class="text-red-400 text-sm">{{ error }}</p>
     <template v-else>
       <div class="flex items-center justify-between">
-        <p class="text-sm text-gray-300">Nombre: <span class="font-medium text-gray-100">{{ name || '(sin nombre)' }}<span v-if="device && device.imei"> - {{ device.imei }}</span></span></p>
-        <a v-if="lastdrop" :href="externalMapUrl" target="_blank" class="text-xs sm:text-sm text-blue-300 hover:text-blue-200 hover:underline">Abrir en Maps</a>
+        <p class="text-sm" :class="theme === 'light' ? 'text-gray-700' : 'text-gray-300'">Nombre: <span class="font-medium" :class="theme === 'light' ? 'text-gray-900' : 'text-gray-100'">{{ name || '(sin nombre)' }}<span v-if="device && device.imei"> - {{ device.imei }}</span></span></p>
+        <a v-if="lastdrop" :href="externalMapUrl" target="_blank" class="text-xs sm:text-sm text-blue-500 hover:text-blue-400 hover:underline">Abrir en Maps</a>
       </div>
 
       <div v-if="lastdrop" class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-        <div class="rounded-xl border border-white/10 bg-black/40 p-3">
+        <div class="rounded-xl border p-3" :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#f5f2e9]' : 'border-white/10 bg-black/40'">
           <div class="flex items-center justify-between mb-1">
-            <p class="text-gray-400">Actualizados</p>
+            <p :class="theme === 'light' ? 'text-gray-600' : 'text-gray-400'">Actualizados</p>
             <Clock3 class="w-3.5 h-3.5 text-blue-300" />
           </div>
-          <p class="font-medium text-gray-100">{{ lastdrop.update_time }}</p>
+          <p :class="theme === 'light' ? 'font-medium text-gray-900' : 'font-medium text-gray-100'">{{ lastdrop.update_time }}</p>
         </div>
-        <div class="rounded-xl border border-white/10 bg-black/40 p-3">
+        <div class="rounded-xl border p-3" :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#f5f2e9]' : 'border-white/10 bg-black/40'">
           <div class="flex items-center justify-between mb-1">
-            <p class="text-gray-400">Velocidad</p>
+            <p :class="theme === 'light' ? 'text-gray-600' : 'text-gray-400'">Velocidad</p>
             <Gauge class="w-3.5 h-3.5 text-orange-300" />
           </div>
-          <p class="font-medium text-gray-100">{{ lastdrop.speed }} km/h</p>
+          <p :class="theme === 'light' ? 'font-medium text-gray-900' : 'font-medium text-gray-100'">{{ lastdrop.speed }} km/h</p>
         </div>
-        <div class="rounded-xl border border-white/10 bg-black/40 p-3">
-          <p class="text-gray-400">Coordenadas</p>
-          <p class="font-medium text-gray-100">{{ lastdrop.lat }}, {{ lastdrop.lng }}</p>
+        <div class="rounded-xl border p-3" :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#f5f2e9]' : 'border-white/10 bg-black/40'">
+          <p :class="theme === 'light' ? 'text-gray-600' : 'text-gray-400'">Coordenadas</p>
+          <p :class="theme === 'light' ? 'font-medium text-gray-900' : 'font-medium text-gray-100'">{{ lastdrop.lat }}, {{ lastdrop.lng }}</p>
         </div>
-        <div class="rounded-xl border border-white/10 bg-black/40 p-3">
-          <p class="text-gray-400">Heading</p>
-          <p class="font-medium text-gray-100">{{ lastdrop.heading }}</p>
+        <div class="rounded-xl border p-3" :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#f5f2e9]' : 'border-white/10 bg-black/40'">
+          <p :class="theme === 'light' ? 'text-gray-600' : 'text-gray-400'">Heading</p>
+          <p :class="theme === 'light' ? 'font-medium text-gray-900' : 'font-medium text-gray-100'">{{ lastdrop.heading }}</p>
         </div>
-        <div class="rounded-xl border border-white/10 bg-black/40 p-3">
+        <div class="rounded-xl border p-3" :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#f5f2e9]' : 'border-white/10 bg-black/40'">
           <p class="text-gray-400 mb-1">Satélites</p>
           <div class="flex items-center gap-1 text-xs text-gray-400" v-if="lastdrop.satelites != null || lastdrop.satellites != null">
             <div class="flex items-end gap-[1px] h-3">
@@ -47,32 +47,32 @@
           </div>
           <p v-else class="font-medium text-gray-500 text-xs">Sin info de satélites</p>
         </div>
-        <div class="rounded-xl border border-white/10 bg-black/40 p-3">
-          <p class="text-gray-400">RSSI</p>
-          <p class="font-medium text-gray-100">{{ lastdrop.rssi }}</p>
+        <div class="rounded-xl border p-3" :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#f5f2e9]' : 'border-white/10 bg-black/40'">
+          <p :class="theme === 'light' ? 'text-gray-600' : 'text-gray-400'">RSSI</p>
+          <p :class="theme === 'light' ? 'font-medium text-gray-900' : 'font-medium text-gray-100'">{{ lastdrop.rssi }}</p>
         </div>
-        <div class="rounded-xl border border-white/10 bg-black/40 p-3">
-          <p class="text-gray-400">Batería</p>
-          <p class="font-medium text-gray-100">{{ lastdrop.powerBat }}</p>
+        <div class="rounded-xl border p-3" :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#f5f2e9]' : 'border-white/10 bg-black/40'">
+          <p :class="theme === 'light' ? 'text-gray-600' : 'text-gray-400'">Batería</p>
+          <p :class="theme === 'light' ? 'font-medium text-gray-900' : 'font-medium text-gray-100'">{{ lastdrop.powerBat }}</p>
         </div>
-        <div class="rounded-xl border border-white/10 bg-black/40 p-3">
-          <p class="text-gray-400">Alimentación</p>
-          <p class="font-medium text-gray-100">{{ lastdrop.powerSupply }}</p>
+        <div class="rounded-xl border p-3" :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#f5f2e9]' : 'border-white/10 bg-black/40'">
+          <p :class="theme === 'light' ? 'text-gray-600' : 'text-gray-400'">Alimentación</p>
+          <p :class="theme === 'light' ? 'font-medium text-gray-900' : 'font-medium text-gray-100'">{{ lastdrop.powerSupply }}</p>
         </div>
-        <div class="rounded-xl border border-white/10 bg-black/40 p-3">
-          <p class="text-gray-400">Odómetro total</p>
-          <p class="font-medium text-gray-100">{{ lastdrop.odometroTotal }}</p>
+        <div class="rounded-xl border p-3" :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#f5f2e9]' : 'border-white/10 bg-black/40'">
+          <p :class="theme === 'light' ? 'text-gray-600' : 'text-gray-400'">Odómetro total</p>
+          <p :class="theme === 'light' ? 'font-medium text-gray-900' : 'font-medium text-gray-100'">{{ lastdrop.odometroTotal }}</p>
         </div>
-        <div class="rounded-xl border border-white/10 bg-black/40 p-3">
-          <p class="text-gray-400">Odómetro reporte</p>
-          <p class="font-medium text-gray-100">{{ lastdrop.odometroReporte }}</p>
+        <div class="rounded-xl border p-3" :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#f5f2e9]' : 'border-white/10 bg-black/40'">
+          <p :class="theme === 'light' ? 'text-gray-600' : 'text-gray-400'">Odómetro reporte</p>
+          <p :class="theme === 'light' ? 'font-medium text-gray-900' : 'font-medium text-gray-100'">{{ lastdrop.odometroReporte }}</p>
         </div>
-        <div class="rounded-xl border border-white/10 bg-black/40 p-3 sm:col-span-3">
-          <p class="text-gray-400">Estado</p>
-          <p class="font-medium text-gray-100">{{ lastdrop.stoped ? 'Detenido' : 'En movimiento' }}</p>
+        <div class="rounded-xl border p-3 sm:col-span-3" :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#f5f2e9]' : 'border-white/10 bg-black/40'">
+          <p :class="theme === 'light' ? 'text-gray-600' : 'text-gray-400'">Estado</p>
+          <p :class="theme === 'light' ? 'font-medium text-gray-900' : 'font-medium text-gray-100'">{{ lastdrop.stoped ? 'Detenido' : 'En movimiento' }}</p>
         </div>
       </div>
-      <p v-else class="mt-4 text-sm text-gray-400">Sin datos recientes (lastdrop).</p>
+      <p v-else class="mt-4 text-sm" :class="theme === 'light' ? 'text-gray-600' : 'text-gray-400'">Sin datos recientes (lastdrop).</p>
     </template>
   </div>
 </template>
@@ -80,6 +80,9 @@
 <script setup>
 import { computed } from 'vue'
 import { Clock3, Gauge } from 'lucide-vue-next'
+import { useTheme } from '@/composables/useTheme'
+
+const { theme } = useTheme()
 
 const props = defineProps({
   name: String,

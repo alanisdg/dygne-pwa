@@ -4,6 +4,9 @@ window.subscribeToPush = subscribeToPush;
 
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
+import { useTheme } from './composables/useTheme'
+
+useTheme().initTheme()
 
 createInertiaApp({
   resolve: name => {

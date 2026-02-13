@@ -9,3 +9,25 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+:root.theme-dark {
+    --app-bg: #0f1418;
+    --app-surface: #050814;
+    --app-text: #e5e7eb;
+    --card-bg: #1e2734;
+    --card-border: #161c25;
+}
+
+:root.theme-light {
+    --app-bg: #faf9f5;
+    --app-surface: #faf9f5;
+    --app-text: #111827;
+    --card-bg: #faf9f5;
+    --card-border: #e6e2d8;
+}
+
+body {
+    background: var(--app-bg);
+    color: var(--app-text);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}

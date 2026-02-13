@@ -1,15 +1,15 @@
 <template>
-  <div class="min-h-screen bg-black text-gray-100 p-0 sm:p-4 relative">
+  <div class="min-h-screen p-0 sm:p-4 relative" :style="{ backgroundColor: 'var(--app-bg)', color: 'var(--app-text)' }">
     <div class="max-w-3xl mx-auto">
       <div class="flex items-center gap-3 px-4 pt-4 sm:px-0 sm:pt-0 mb-4">
-        <a href="/app" class="inline-flex items-center text-sm text-gray-400 hover:text-gray-100">
+        <a href="/app" class="inline-flex items-center text-sm" :class="theme === 'light' ? 'text-gray-600 hover:text-gray-900' : 'text-gray-400 hover:text-gray-100'">
           ← Volver
         </a>
         <h1 class="text-xl font-semibold tracking-tight">{{ loading ? 'Cargando…' : (name || `Device #${id}`) }}</h1>
       </div>
 
       <!-- Top half: Map -->
-      <div class="h-[50vh] bg-[#0f1418]  overflow-hidden border border-white/5">
+      <div class="h-[50vh] overflow-hidden border" :class="theme === 'light' ? 'bg-[#faf9f5] border-[#e6e2d8]' : 'bg-[#0f1418] border-white/5'">
         <div v-if="hasAnyCoords" class="h-full w-full">
           <div ref="mapEl" class="h-full w-full"></div>
         </div>
@@ -19,7 +19,7 @@
       </div>
 
       <!-- Report range: quick + custom tabs -->
-      <div class="bg-[#0f1418] border border-white/5 shadow-sm rounded-b-3xl sm:rounded-3xl p-4 sm:p-5 mt-0 sm:mt-4">
+      <div class="border shadow-sm rounded-b-3xl sm:rounded-3xl p-4 sm:p-5 mt-0 sm:mt-4" :class="theme === 'light' ? 'bg-[#faf9f5] border-[#e6e2d8]' : 'bg-[#0f1418] border-white/5'">
         <!-- Tabs -->
         <div class="border-b border-white/10 mb-4 flex gap-3 text-sm">
           <button
@@ -82,7 +82,8 @@
               v-model="startDateLocal"
               type="datetime-local"
               inputmode="none"
-              class="w-full border border-white/10 bg-black rounded px-3 py-2 text-sm text-gray-100"
+              class="w-full border rounded px-3 py-2 text-sm"
+              :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#faf9f5] text-gray-900' : 'border-white/10 bg-black text-gray-100'"
               @click="openNativePicker('start', $event)"
               @focus="$event.target.blur(); openNativePicker('start', $event)"
             />
@@ -93,9 +94,11 @@
               v-model="endDateLocal"
               type="datetime-local"
               inputmode="none"
-              class="w-full border border-white/10 bg-black rounded px-3 py-2 text-sm text-gray-100"
+              class="w-full border rounded px-3 py-2 text-sm"
+              :class="theme === 'light' ? 'border-[#e6e2d8] bg-[#faf9f5] text-gray-900' : 'border-white/10 bg-black text-gray-100'"
               @click="openNativePicker('end', $event)"
               @focus="$event.target.blur(); openNativePicker('end', $event)"
+            />
           </div>
           <div class="sm:col-span-4 flex flex-wrap items-center gap-2">
             <button
@@ -184,15 +187,15 @@
       <!-- Media modal -->
       <div v-if="showMediaModal && selectedMedia" class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-black/70" @click="closeMediaModal"></div>
-        <div class="relative bg-[#0f1418] border border-white/10 rounded-2xl shadow-xl max-w-2xl w-[92vw] sm:w-[600px] overflow-hidden">
-          <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
-            <h3 class="text-sm font-medium text-gray-100">Detalle de media</h3>
+        <div class="relative border rounded-2xl shadow-xl max-w-2xl w-[92vw] sm:w-[600px] overflow-hidden" :class="theme === 'light' ? 'bg-[#faf9f5] border-[#e6e2d8]' : 'bg-[#0f1418] border-white/10'">
+          <div class="flex items-center justify-between px-4 py-3 border-b" :class="theme === 'light' ? 'border-[#e6e2d8]' : 'border-white/10'">
+            <h3 class="text-sm font-medium" :class="theme === 'light' ? 'text-gray-900' : 'text-gray-100'">Detalle de media</h3>
             <div class="flex items-center gap-2">
               <Share v-if="selectedMedia" :media="selectedMedia" />
               <button @click="downloadSelectedMedia" class="px-3 py-1.5 bg-blue-600 text-white rounded-full text-xs hover:bg-blue-700 disabled:opacity-60" :disabled="downloading || !selectedMedia">
                 {{ downloading ? 'Descargando…' : 'Descargar' }}
               </button>
-              <button @click="closeMediaModal" class="text-gray-400 hover:text-gray-100 text-sm">✕</button>
+              <button @click="closeMediaModal" class="text-sm" :class="theme === 'light' ? 'text-gray-500 hover:text-gray-900' : 'text-gray-400 hover:text-gray-100'">✕</button>
             </div>
           </div>
           <div class="p-4 space-y-3">
@@ -225,10 +228,10 @@
       <!-- Report drops modal -->
       <div v-if="showReportModal" class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-black/70" @click="showReportModal = false"></div>
-        <div class="relative bg-[#050814] border border-white/10 rounded-2xl shadow-xl max-w-4xl w-[96vw] sm:w-[900px] max-h-[80vh] overflow-hidden">
-          <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
-            <h3 class="text-sm font-medium text-gray-100">Reporte de recorrido ({{ drops.length }} puntos)</h3>
-            <button @click="showReportModal = false" class="text-gray-400 hover:text-gray-100 text-sm">✕</button>
+        <div class="relative border rounded-2xl shadow-xl max-w-4xl w-[96vw] sm:w-[900px] max-h-[80vh] overflow-hidden" :class="theme === 'light' ? 'bg-[#faf9f5] border-[#e6e2d8]' : 'bg-[#050814] border-white/10'">
+          <div class="flex items-center justify-between px-4 py-3 border-b" :class="theme === 'light' ? 'border-[#e6e2d8]' : 'border-white/10'">
+            <h3 class="text-sm font-medium" :class="theme === 'light' ? 'text-gray-900' : 'text-gray-100'">Reporte de recorrido ({{ drops.length }} puntos)</h3>
+            <button @click="showReportModal = false" class="text-sm" :class="theme === 'light' ? 'text-gray-500 hover:text-gray-900' : 'text-gray-400 hover:text-gray-100'">✕</button>
           </div>
           <div class="p-4 max-h-[calc(80vh-48px)] flex flex-col">
             <div v-if="!drops || drops.length === 0" class="text-sm text-gray-400">
@@ -286,7 +289,7 @@
       </div>
 
       <!-- Tabs -->
-      <div class="bg-[#0f1418] border border-white/5 shadow-sm rounded-t-3xl sm:rounded-3xl -mt-4 sm:mt-4 relative z-10">
+      <div class="border shadow-sm rounded-t-3xl sm:rounded-3xl -mt-4 sm:mt-4 relative z-10" :class="theme === 'light' ? 'bg-[#faf9f5] border-[#e6e2d8]' : 'bg-[#0f1418] border-white/5'">
         <div class="border-b border-white/10 px-4 sm:px-5 pt-4">
           <div class="flex gap-3">
             <button
@@ -366,8 +369,11 @@ import DeviceMedia from '@/components/DeviceMedia.vue'
 import RequestedDeviceMedia from '@/components/RequestedDeviceMedia.vue'
 import DeviceTrips from '@/components/DeviceTrips.vue'
 import io from 'socket.io-client'
+import { useTheme } from '@/composables/useTheme'
  
  
+
+const { theme } = useTheme()
 
 const props = defineProps({
   id: String,

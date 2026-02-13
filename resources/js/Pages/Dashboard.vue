@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#0f1418] text-gray-100">
+  <div class="min-h-screen" :style="{ backgroundColor: 'var(--app-bg)', color: 'var(--app-text)' }">
     <div class="max-w-3xl mx-auto px-4 ">
       <!-- Header -->
       <div class="px-4 py-3 mb-5 flex flex-col gap-1">
@@ -21,7 +21,10 @@
             v-model="q"
             type="text"
             placeholder="Buscar por nombre…"
-            class="w-full rounded-full border border-white/10 bg-[#050814] px-4 py-2 text-sm placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-blue-500/70 focus:border-blue-500/70"
+            class="w-full rounded-full border px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/70 focus:border-blue-500/70"
+            :class="theme === 'light'
+              ? 'bg-[#faf9f5] border-[#e6e2d8] text-gray-900 placeholder:text-gray-500'
+              : 'bg-[#050814] border-white/10 text-gray-100 placeholder:text-gray-500'"
           />
         </div>
 
@@ -32,13 +35,16 @@
           <div
             v-for="d in filtered"
             :key="d.id"
-            class="block rounded-lg bg-[#1e2734] border px-5 py-4 transition-colors cursor-pointer select-none relative"
+            class="block rounded-lg border px-5 py-4 transition-colors cursor-pointer select-none relative"
             :class="[
               isDeviceSelected(d.id)
                 ? 'border-emerald-400/80 shadow-[0_0_0_1px_rgba(16,185,129,0.5)] bg-emerald-500/10'
-                : 'border-[#161c25] hover:border-[#1e2630]',
+                : 'hover:brightness-95',
               isDeviceMoving(d) ? 'device-moving' : ''
             ]"
+            :style="isDeviceSelected(d.id)
+              ? {}
+              : { backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }"
             @click="handleCardClick(d)"
             @mousedown.passive="onPressStart($event, d)"
             @touchstart.passive="onPressStart($event, d)"
@@ -47,11 +53,14 @@
             @touchend="onPressEnd"
           >
             <div class="flex items-start justify-between gap-3">
-              <div class="space-y-1">
-                <p class="text-base font-semibold text-blue-200 tracking-tight">{{ d.name || 'Sin nombre' }}</p>
-                <p class="text-xs text-gray-500">IMEI: {{ d.imei }}</p>
+              <div class="space-y-1 min-w-0 pr-2">
+                <p class="text-base font-semibold tracking-tight truncate" :class="theme === 'light' ? 'text-black' : 'text-blue-200'">{{ d.name || 'Sin nombre' }}</p>
+                <p class="text-xs text-gray-500 truncate">IMEI: {{ d.imei }}</p>
               </div>
-              <div class="absolute top-3 right-3 flex items-center justify-center w-7 h-7 rounded-full border border-white/15 bg-black/40">
+              <div
+                class="shrink-0 flex items-center justify-center w-7 h-7 rounded-full border"
+                :class="theme === 'light' ? 'border-black/10 bg-black/5' : 'border-white/15 bg-black/40'"
+              >
                 <Camera v-if="d.has_camera" class="w-3.5 h-3.5 text-emerald-300" />
                 <CameraOff v-else class="w-3.5 h-3.5 text-gray-500" />
               </div>
@@ -242,8 +251,10 @@ import LastUpdateBadge from '@/components/LastUpdateBadge.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import io from 'socket.io-client'
 import { Gauge, CirclePower, Camera, CameraOff } from 'lucide-vue-next'
+import { useTheme } from '@/composables/useTheme'
 
 const email = ref('')
+const { theme } = useTheme()
 
 // Devices state
 const devices = ref([])

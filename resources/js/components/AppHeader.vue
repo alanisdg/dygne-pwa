@@ -12,9 +12,25 @@
     </div>
 
     <div class="flex items-center gap-3 relative">
+      <button
+        type="button"
+        class="inline-flex items-center justify-center rounded-full border p-2 transition"
+        :class="theme === 'dark'
+          ? 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-200 hover:text-white'
+          : 'bg-black/5 hover:bg-black/10 border-black/10 text-gray-700 hover:text-gray-900'"
+        :title="theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        @click="toggleTheme"
+      >
+        <Sun v-if="theme === 'dark'" class="w-4 h-4" />
+        <Moon v-else class="w-4 h-4" />
+      </button>
+
       <a
         href="/notifications"
-        class="inline-flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 p-2 text-gray-200 hover:text-white transition"
+        class="inline-flex items-center justify-center rounded-full border p-2 transition"
+        :class="theme === 'dark'
+          ? 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-200 hover:text-white'
+          : 'bg-black/5 hover:bg-black/10 border-black/10 text-gray-700 hover:text-gray-900'"
         title="Notificaciones"
       >
         <Bell class="w-4 h-4" />
@@ -87,8 +103,9 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Bell, Settings, Share2, LogOut } from 'lucide-vue-next'
+import { Bell, Settings, Share2, LogOut, Sun, Moon } from 'lucide-vue-next'
 import CustomerSwitcher from '@/components/CustomerSwitcher.vue'
+import { useTheme } from '@/composables/useTheme'
 
 const props = defineProps({
   title: {
@@ -104,6 +121,8 @@ const props = defineProps({
     default: '',
   },
 })
+
+const { theme, toggleTheme } = useTheme()
 
 const loading = ref(false)
 const message = ref('')
