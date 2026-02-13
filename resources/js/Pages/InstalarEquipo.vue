@@ -22,7 +22,7 @@
               :disabled="loading"
             >
               <QrCode :size="16" />
-              Escanear
+              <span class="scan-label">Escanear</span>
             </button>
           </div>
 
@@ -85,6 +85,27 @@
           <button class="w-full py-2 rounded-lg bg-emerald-600 text-sm" @click="guardar" :disabled="saving">
             {{ saving ? 'Guardando...' : 'Guardar instalación' }}
           </button>
+
+          <div class="mt-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-xs font-semibold text-emerald-300">Monitor</p>
+              <div class="flex items-center gap-1 text-[11px]" :class="monitorDrop ? 'text-emerald-300' : 'text-gray-400'">
+                <CheckCircle2 class="w-4 h-4" :class="monitorFlash ? 'monitor-blink' : ''" />
+                <span>{{ monitorDrop ? 'Activo' : 'Esperando drop...' }}</span>
+              </div>
+            </div>
+
+            <div v-if="monitorDrop" class="text-xs space-y-1">
+              <p><span class="text-gray-400">Update:</span> {{ monitorDrop.update_time || '-' }}</p>
+              <p><span class="text-gray-400">Evento:</span> {{ monitorDrop.event_name || monitorDrop.unified_event_name || monitorDrop.event_code || monitorDrop.unified_event_code || '-' }}</p>
+              <p><span class="text-gray-400">GPS:</span> {{ monitorDrop.lat }}, {{ monitorDrop.lng }}</p>
+            </div>
+
+            <div class="mt-2 text-xs">
+              <p v-if="mediaReceivingText" class="text-amber-300">{{ mediaReceivingText }}</p>
+              <p v-else class="text-gray-400">Sin recepción de imagen/video en este momento.</p>
+            </div>
+          </div>
         </div>
 
         <p v-if="message" class="text-xs" :class="messageType === 'ok' ? 'text-emerald-300' : 'text-red-300'">{{ message }}</p>
@@ -111,7 +132,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import axios from 'axios'
-import { QrCode } from 'lucide-vue-next'
+import io from 'socket.io-client'
+import { QrCode, CheckCircle2 } from 'lucide-vue-next'
 import AppHeader from '@/components/AppHeader.vue'
 
 const API = 'https://app.dygne.com/api'
@@ -149,6 +171,14 @@ let scanStream = null
 let scanTimer = null
 let qrDetector = null
 
+const monitorDrop = ref(null)
+const monitorFlash = ref(false)
+const mediaReceivingText = ref('')
+
+let socketGps = null
+let socketCalamp = null
+let mediaProgressInterval = null
+
 onMounted(async () => {
   headerEmail.value = localStorage.getItem('auth_email') || ''
   await loadCatalogs()
@@ -164,6 +194,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   closeScanner()
+  stopMonitor()
 })
 
 function authHeaders() {
@@ -245,6 +276,101 @@ async function loadDeviceByImei(imei) {
   form.value.customer_id = data.customer_id ? String(data.customer_id) : ''
   form.value.picture = null
   picturePreview.value = data.picture ? (String(data.picture).startsWith('http') ? data.picture : `https://app.dygne.com/storage/${String(data.picture).replace(/^\/+/, '')}`) : ''
+
+  startMonitor(data.imei)
+}
+
+function setMonitorDrop(drop) {
+  monitorDrop.value = {
+    update_time: drop?.update_time || drop?.updateTime || drop?.timeOfFix || '-',
+    event_name: drop?.event_name,
+    unified_event_name: drop?.unified_event_name,
+    event_code: drop?.event_code,
+    unified_event_code: drop?.unified_event_code,
+    lat: drop?.lat,
+    lng: drop?.lng,
+  }
+
+  monitorFlash.value = false
+  requestAnimationFrame(() => {
+    monitorFlash.value = true
+    setTimeout(() => {
+      monitorFlash.value = false
+    }, 900)
+  })
+}
+
+async function checkMediaProgress(imei) {
+  if (!imei) {
+    mediaReceivingText.value = ''
+    return
+  }
+
+  try {
+    const { data } = await axios.get(`${API}/media/progress`, {
+      params: { imei },
+      headers: authHeaders(),
+    })
+
+    const busy = data?.trigger?.status === true
+    const type = String(data?.type ?? data?.trigger?.type ?? '').toLowerCase()
+
+    if (!busy) {
+      mediaReceivingText.value = ''
+      return
+    }
+
+    if (type.includes('video')) {
+      mediaReceivingText.value = '🎥 Recibiendo video...'
+    } else if (type.includes('photo') || type.includes('image') || type.includes('foto')) {
+      mediaReceivingText.value = '📷 Recibiendo imagen...'
+    } else {
+      mediaReceivingText.value = '📡 Recibiendo media...'
+    }
+  } catch (_) {
+    mediaReceivingText.value = ''
+  }
+}
+
+function stopMonitor() {
+  if (socketGps) {
+    socketGps.disconnect()
+    socketGps = null
+  }
+  if (socketCalamp) {
+    socketCalamp.disconnect()
+    socketCalamp = null
+  }
+  if (mediaProgressInterval) {
+    clearInterval(mediaProgressInterval)
+    mediaProgressInterval = null
+  }
+}
+
+function startMonitor(imei) {
+  stopMonitor()
+  monitorDrop.value = null
+  mediaReceivingText.value = ''
+
+  if (!imei) return
+
+  const opts = { secure: true }
+  socketGps = io.connect('https://app.dygne.com:3002', opts)
+  socketCalamp = io.connect('https://app.dygne.com:3004', opts)
+
+  const handleDrop = (drop) => {
+    if (!drop?.imei) return
+    if (String(drop.imei) !== String(imei)) return
+    setMonitorDrop(drop)
+  }
+
+  socketGps.on('drop', handleDrop)
+  socketCalamp.on('drop', handleDrop)
+
+  checkMediaProgress(imei)
+  mediaProgressInterval = setInterval(() => {
+    checkMediaProgress(imei)
+  }, 3000)
 }
 
 function onPictureChange(e) {
@@ -366,3 +492,20 @@ async function guardar() {
   }
 }
 </script>
+
+<style scoped>
+.monitor-blink {
+  animation: monitorBlink 0.9s ease-in-out;
+}
+
+@keyframes monitorBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(1.2); }
+}
+
+@media (max-width: 360px) {
+  .scan-label {
+    display: none;
+  }
+}
+</style>
