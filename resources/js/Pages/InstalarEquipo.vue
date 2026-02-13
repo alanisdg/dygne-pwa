@@ -4,16 +4,30 @@
       <AppHeader title="Instalar Equipo" :email="headerEmail" />
 
       <div class="mt-4 rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
-        <div class="flex gap-2">
-          <input
-            v-model.trim="imei"
-            type="text"
-            class="flex-1 rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm"
-            placeholder="Buscar por IMEI"
-          />
-          <button class="px-4 py-2 rounded-lg bg-blue-600 text-sm" @click="buscar" :disabled="loading">
-            {{ loading ? 'Buscando...' : 'Buscar' }}
-          </button>
+        <div class="space-y-2">
+          <div class="flex gap-2">
+            <input
+              v-model.trim="searchQuery"
+              type="text"
+              class="flex-1 rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm"
+              placeholder="Buscar por IMEI o nombre"
+            />
+            <button class="px-4 py-2 rounded-lg bg-blue-600 text-sm" @click="buscar" :disabled="loading">
+              {{ loading ? 'Buscando...' : 'Buscar' }}
+            </button>
+          </div>
+
+          <div v-if="searchResults.length" class="rounded-lg border border-white/10 bg-black/40 max-h-52 overflow-auto">
+            <button
+              v-for="r in searchResults"
+              :key="r.id"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-white/10"
+              @click="selectDevice(r)"
+            >
+              <div class="text-gray-100">{{ r.name || 'Sin nombre' }}</div>
+              <div class="text-xs text-gray-400">IMEI: {{ r.imei }}</div>
+            </button>
+          </div>
         </div>
 
         <div v-if="device" class="space-y-3">
@@ -41,12 +55,16 @@
             </select>
           </div>
 
-          <div>
-            <input ref="pictureInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onPictureChange" />
-            <button class="w-full rounded-lg border border-white/20 bg-black/40 p-2" @click="openCamera">
-              <img v-if="picturePreview" :src="picturePreview" class="mx-auto max-h-56 rounded" />
-              <span v-else class="text-sm text-gray-300">Tomar foto</span>
-            </button>
+          <div class="space-y-2">
+            <label class="block text-xs text-gray-300">Foto del equipo</label>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              class="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm"
+              @change="onPictureChange"
+            />
+            <img v-if="picturePreview" :src="picturePreview" class="mx-auto max-h-56 rounded border border-white/10" />
           </div>
 
           <button class="w-full py-2 rounded-lg bg-emerald-600 text-sm" @click="guardar" :disabled="saving">
@@ -67,7 +85,8 @@ import AppHeader from '@/components/AppHeader.vue'
 
 const API = 'https://app.dygne.com/api'
 const headerEmail = ref('')
-const imei = ref('')
+const searchQuery = ref('')
+const searchResults = ref([])
 const device = ref(null)
 const loading = ref(false)
 const saving = ref(false)
@@ -89,7 +108,6 @@ const form = ref({
   picture: null,
 })
 
-const pictureInput = ref(null)
 const picturePreview = ref('')
 
 onMounted(async () => {
@@ -114,30 +132,53 @@ async function loadCatalogs() {
 async function buscar() {
   message.value = ''
   loading.value = true
+  searchResults.value = []
   try {
-    const { data } = await axios.get(`${API}/device/${encodeURIComponent(imei.value)}`)
-    if (!data?.id) throw new Error('No encontrado')
+    const { data } = await axios.get(`${API}/devices/find`, {
+      params: { q: searchQuery.value || '' },
+      headers: authHeaders(),
+    })
 
-    device.value = data
-    form.value.name = data.name || ''
-    form.value.number = data.number || ''
-    form.value.plate = data.plate || ''
-    form.value.chip_id = data.chip_id ? String(data.chip_id) : ''
-    form.value.model_device_id = data.model_device_id ? String(data.model_device_id) : ''
-    form.value.installed_date = data.installed_date || ''
-    form.value.installed_by_user_id = data.installed_by_user_id ? String(data.installed_by_user_id) : ''
-    form.value.picture = null
-    picturePreview.value = data.picture ? (String(data.picture).startsWith('http') ? data.picture : `https://app.dygne.com/storage/${String(data.picture).replace(/^\/+/, '')}`) : ''
+    const list = Array.isArray(data) ? data : []
+    searchResults.value = list
+
+    if (list.length === 1) {
+      await loadDeviceByImei(list[0].imei)
+      searchResults.value = []
+    }
+
+    if (!list.length) {
+      messageType.value = 'error'
+      message.value = 'No se encontraron equipos con ese IMEI o nombre.'
+    }
   } catch (e) {
     messageType.value = 'error'
-    message.value = 'No se encontró el equipo por IMEI.'
+    message.value = 'Error buscando equipos.'
   } finally {
     loading.value = false
   }
 }
 
-function openCamera() {
-  pictureInput.value?.click()
+async function selectDevice(row) {
+  searchQuery.value = row?.imei || row?.name || ''
+  searchResults.value = []
+  await loadDeviceByImei(row?.imei)
+}
+
+async function loadDeviceByImei(imei) {
+  const { data } = await axios.get(`${API}/device/${encodeURIComponent(imei)}`)
+  if (!data?.id) throw new Error('No encontrado')
+
+  device.value = data
+  form.value.name = data.name || ''
+  form.value.number = data.number || ''
+  form.value.plate = data.plate || ''
+  form.value.chip_id = data.chip_id ? String(data.chip_id) : ''
+  form.value.model_device_id = data.model_device_id ? String(data.model_device_id) : ''
+  form.value.installed_date = data.installed_date || ''
+  form.value.installed_by_user_id = data.installed_by_user_id ? String(data.installed_by_user_id) : ''
+  form.value.picture = null
+  picturePreview.value = data.picture ? (String(data.picture).startsWith('http') ? data.picture : `https://app.dygne.com/storage/${String(data.picture).replace(/^\/+/, '')}`) : ''
 }
 
 function onPictureChange(e) {
@@ -170,7 +211,7 @@ async function guardar() {
 
     messageType.value = 'ok'
     message.value = 'Equipo actualizado correctamente.'
-    await buscar()
+    await loadDeviceByImei(device.value.imei)
   } catch (e) {
     messageType.value = 'error'
     message.value = e?.response?.data?.message || 'No se pudo actualizar el equipo.'
