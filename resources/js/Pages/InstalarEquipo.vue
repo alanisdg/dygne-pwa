@@ -48,11 +48,17 @@
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input v-model="form.installed_date" type="date" class="rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm" />
-            <select v-model="form.installed_by_user_id" class="rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm">
-              <option value="">Instalado por</option>
-              <option v-for="u in users" :key="u.id" :value="String(u.id)">{{ u.name }}</option>
-            </select>
+            <div>
+              <label class="block text-xs text-gray-300 mb-1">Fecha de instalación</label>
+              <input v-model="form.installed_date" type="date" class="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-300 mb-1">Transferir a cliente</label>
+              <select v-model="form.customer_id" class="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm">
+                <option value="">Sin cambio</option>
+                <option v-for="c in customers" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+              </select>
+            </div>
           </div>
 
           <div class="space-y-2">
@@ -96,6 +102,7 @@ const messageType = ref('ok')
 const chips = ref([])
 const models = ref([])
 const users = ref([])
+const customers = ref([])
 
 const form = ref({
   name: '',
@@ -104,7 +111,7 @@ const form = ref({
   chip_id: '',
   model_device_id: '',
   installed_date: '',
-  installed_by_user_id: '',
+  customer_id: '',
   picture: null,
 })
 
@@ -126,6 +133,7 @@ async function loadCatalogs() {
     chips.value = data?.chips || []
     models.value = data?.models || []
     users.value = data?.users || []
+    customers.value = data?.customers || []
   } catch (_) {}
 }
 
@@ -176,7 +184,7 @@ async function loadDeviceByImei(imei) {
   form.value.chip_id = data.chip_id ? String(data.chip_id) : ''
   form.value.model_device_id = data.model_device_id ? String(data.model_device_id) : ''
   form.value.installed_date = data.installed_date || ''
-  form.value.installed_by_user_id = data.installed_by_user_id ? String(data.installed_by_user_id) : ''
+  form.value.customer_id = data.customer_id ? String(data.customer_id) : ''
   form.value.picture = null
   picturePreview.value = data.picture ? (String(data.picture).startsWith('http') ? data.picture : `https://app.dygne.com/storage/${String(data.picture).replace(/^\/+/, '')}`) : ''
 }
@@ -202,7 +210,7 @@ async function guardar() {
     fd.append('chip_id', form.value.chip_id || '')
     fd.append('model_device_id', form.value.model_device_id || '')
     fd.append('installed_date', form.value.installed_date || '')
-    fd.append('installed_by_user_id', form.value.installed_by_user_id || '')
+    fd.append('customer_id', form.value.customer_id || '')
     if (form.value.picture) fd.append('picture', form.value.picture)
 
     await axios.post(`${API}/devices/${device.value.id}`, fd, {
