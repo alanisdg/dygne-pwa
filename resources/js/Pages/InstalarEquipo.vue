@@ -134,7 +134,21 @@ async function loadCatalogs() {
     models.value = data?.models || []
     users.value = data?.users || []
     customers.value = data?.customers || []
-  } catch (_) {}
+
+    if (!customers.value.length) {
+      const customersRes = await axios.get(`${API}/customers`, { headers: authHeaders() })
+      customers.value = Array.isArray(customersRes.data)
+        ? customersRes.data
+        : (customersRes.data?.data || [])
+    }
+  } catch (e) {
+    try {
+      const customersRes = await axios.get(`${API}/customers`, { headers: authHeaders() })
+      customers.value = Array.isArray(customersRes.data)
+        ? customersRes.data
+        : (customersRes.data?.data || [])
+    } catch (_) {}
+  }
 }
 
 async function buscar() {
